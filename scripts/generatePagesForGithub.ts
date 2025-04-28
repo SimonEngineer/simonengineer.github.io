@@ -37,7 +37,8 @@ for (const route of nonRootRoutes) {
 <title>Redirection ${route}</title>
  <script>
         window.onload = function() {
-            window.location.href = '${route}' + window.location.search; // Redirect on page load
+            const searchParams = window.location.search.replace("?","")
+            window.location.href = '/?githubPagesRedirectPath=${route}' + (searchParams === '' ? '' : '&' + searchParams) ; // Redirect on page load
         };
     </script>
 </head>
