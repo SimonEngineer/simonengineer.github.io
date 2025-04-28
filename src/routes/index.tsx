@@ -7,8 +7,11 @@ import {Octokit} from "@octokit/rest";
 //     githubPagesRedirectPath:string | null
 // }
 
+
+
 export const Route = createFileRoute('/')({
     component: App,
+
     // validateSearch: (search: Record<string, unknown>): RootPageSearchParams =>{
     //     const {githubPagesRedirectPath} = search;
     //
