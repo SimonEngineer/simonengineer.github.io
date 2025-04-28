@@ -1,7 +1,7 @@
 import fs from "fs-extra";
 import * as path from "node:path";
 
-const filePath = path.join('dist', "about", 'index.html');
+const filePath = path.join('../dist', "about", 'index.html');
 // @ts-ignore
 await fs.ensureDir(path.dirname(filePath));
 // @ts-ignore

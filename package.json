@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite --port 3000",
     "start": "vite --port 3000",
-    "build": "vite build && npx ts-node .\\scripts\\generatePagesForGithub.ts && tsc",
+    "build": "vite build && cd scripts && npx ts-node generatePagesForGithub.ts && cd ..  && tsc",
     "serve": "vite preview",
     "test": "vitest run"
   },
