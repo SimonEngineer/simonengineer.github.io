@@ -3,7 +3,7 @@ import {useEffect, useState} from "react";
 import {Octokit} from "@octokit/rest";
 import {unknown} from "zod";
 
-type RootPageSearchParams = {
+type RootPageSearchParams = Record<string, unknown> & {
     githubPagesRedirectPath:string | null
 }
 
@@ -31,6 +31,7 @@ type GithubPatInfo = {
 function App() {
     const searchParams = Route.useSearch()
     const router = useRouter()
+    console.log("Index searchParams: ",searchParams)
     //Because the pages need to be in separate files because of GitHub pages, need this redirect to hand over the control back to tanstack router
     if(searchParams.githubPagesRedirectPath != null){
         const {githubPagesRedirectPath, ...rest} = searchParams
