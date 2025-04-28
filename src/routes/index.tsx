@@ -10,7 +10,7 @@ function App() {
     // const accessToken, setAccessToken] = useState<string>()
     return (
         <div className="App">
-            <h1>Hello. kjær?</h1>
+            <h1>Hello. kjær? ddddd</h1>
             {/*<button onClick={()=>{*/}
             {/*    loginToGithub().then(async ()=>{*/}
             {/*        var fetchedAccesstoken = await getGithubAccessToken();*/}
