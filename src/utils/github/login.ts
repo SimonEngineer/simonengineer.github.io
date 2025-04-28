@@ -1,5 +1,7 @@
-const clientId = 'Ov23liyzz1YTD4vxz4NH';
-const redirectUri = 'https://simonengineer.github.io';
+const clientId = 'Ov23lieHUGJofdhVvn94'; //Local
+// const clientId = 'Ov23liyzz1YTD4vxz4NH';
+const redirectUri = 'http://localhost:3000'; //Local
+// const redirectUri = 'https://simonengineer.github.io';
 const scope = 'repo'; // You need "repo" scope to create PRs
 
 // Step 1: Generate code_verifier and code_challenge
