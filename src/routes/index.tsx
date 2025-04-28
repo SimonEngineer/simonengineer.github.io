@@ -1,4 +1,4 @@
-import {createFileRoute} from '@tanstack/react-router'
+import {createFileRoute, Link} from '@tanstack/react-router'
 import {useEffect, useState} from "react";
 import {Octokit} from "@octokit/rest";
 
@@ -61,10 +61,7 @@ function App() {
                 console.log("Authed: ", authed)
             }}> Test github
             </button>
-
-
-            <div>Repo: {githubDataRepo}</div>
-            <div>RepoOwner: {githubDataRepoOwner}</div>
+            <Link to={"/about"}>To about</Link>
 
 
         </div>
