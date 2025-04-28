@@ -1,5 +1,6 @@
 import {Outlet, createRootRoute, redirect} from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
+import {unknown} from "zod";
 
 export const Route = createRootRoute({
   component: () => (
@@ -8,21 +9,15 @@ export const Route = createRootRoute({
       <TanStackRouterDevtools />
     </>
   ),
-    loader: ({ location}) => {
-        const url = new URL(location.href)
-        const redirectPath = url.searchParams.get('githubPagesRedirectPath')
+    validateSearch:(search: Record<string, unknown>):Record<string, unknown> => search,
+    loaderDeps:({search}:{search:Record<string, unknown>})=>({search}),
+    loader: ({ deps:{search}}) => {
+        const {githubPagesRedirectPath,...rest} = search
+        const redirectPath = githubPagesRedirectPath == unknown ? null : githubPagesRedirectPath as string
         if (redirectPath) {
-            const continuedSearchParams = new URLSearchParams(location.href)
-            continuedSearchParams.delete('githubPagesRedirectPath')
-            // Normalize the path if needed
             const normalized = redirectPath.startsWith('/') ? redirectPath : `/${redirectPath}`
-            const searchString = continuedSearchParams.toString()
-            const finalUrl = searchString
-                ? `${normalized}?${searchString}`
-                : normalized
-
-            throw redirect({ to: finalUrl })
+            throw redirect({ to: normalized,search:rest })
         }
-        return null
+
     }
 })
