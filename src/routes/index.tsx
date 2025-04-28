@@ -1,21 +1,21 @@
-import {createFileRoute, Link, useRouter} from '@tanstack/react-router'
+import {createFileRoute, Link} from '@tanstack/react-router'
 import {useEffect, useState} from "react";
 import {Octokit} from "@octokit/rest";
-import {unknown} from "zod";
-
-type RootPageSearchParams = Record<string, unknown> & {
-    githubPagesRedirectPath:string | null
-}
+// import {unknown} from "zod";
+//
+// type RootPageSearchParams = Record<string, unknown> & {
+//     githubPagesRedirectPath:string | null
+// }
 
 export const Route = createFileRoute('/')({
     component: App,
-    validateSearch: (search: Record<string, unknown>): RootPageSearchParams =>{
-        const {githubPagesRedirectPath} = search;
-
-        return {
-            githubPagesRedirectPath: githubPagesRedirectPath == unknown ? null : githubPagesRedirectPath as string,
-        }
-    }
+    // validateSearch: (search: Record<string, unknown>): RootPageSearchParams =>{
+    //     const {githubPagesRedirectPath} = search;
+    //
+    //     return {
+    //         githubPagesRedirectPath: githubPagesRedirectPath == unknown ? null : githubPagesRedirectPath as string,
+    //     }
+    // }
 })
 
 const localStoragePatKey = "GitHubPatToken"
@@ -29,22 +29,22 @@ type GithubPatInfo = {
 
 
 function App() {
-    const searchParams = Route.useSearch()
-    const router = useRouter()
-    console.log("Index searchParams: ",searchParams)
-    //Because the pages need to be in separate files because of GitHub pages, need this redirect to hand over the control back to tanstack router
-    if(searchParams.githubPagesRedirectPath != null){
-        const {githubPagesRedirectPath, ...rest} = searchParams
-        router.navigate({to: githubPagesRedirectPath, search: rest })
-        // console.log("Search params: ",searchParams)
-        // console.log("githubPagesRedirectPath: ",githubPagesRedirectPath)
-        // console.log("rest: ",rest)
-        return
-        // return <div>
-        //
-        //     <button onClick={()=>{ router.navigate({to: githubPagesRedirectPath, search: rest })}}>Redirect</button>
-        // </div>;
-    }
+    // const searchParams = Route.useSearch()
+    // const router = useRouter()
+    // console.log("Index searchParams: ",searchParams)
+    // //Because the pages need to be in separate files because of GitHub pages, need this redirect to hand over the control back to tanstack router
+    // if(searchParams.githubPagesRedirectPath != null){
+    //     const {githubPagesRedirectPath, ...rest} = searchParams
+    //     router.navigate({to: githubPagesRedirectPath, search: rest })
+    //     // console.log("Search params: ",searchParams)
+    //     // console.log("githubPagesRedirectPath: ",githubPagesRedirectPath)
+    //     // console.log("rest: ",rest)
+    //     return
+    //     // return <div>
+    //     //
+    //     //     <button onClick={()=>{ router.navigate({to: githubPagesRedirectPath, search: rest })}}>Redirect</button>
+    //     // </div>;
+    // }
     const [patInput, setPatInput] = useState<string>()
     const [pat, setPat] = useState<GithubPatInfo>({checkedLocalStorage: false, token: null})
 
