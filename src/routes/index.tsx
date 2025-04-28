@@ -1,36 +1,27 @@
-import { createFileRoute } from '@tanstack/react-router'
-import logo from '../logo.svg'
-import '../App.css'
+import {createFileRoute} from '@tanstack/react-router'
+import {useState} from "react";
+import {getGithubAccessToken, loginToGithub} from "@/utils/github/login.ts";
 
 export const Route = createFileRoute('/')({
-  component: App,
+    component: App,
 })
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/routes/index.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-        <a
-          className="App-link"
-          href="https://tanstack.com"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn TanStack
-        </a>
-      </header>
-    </div>
-  )
+    const [accessToken, setAccessToken] = useState<string>()
+    return (
+        <div className="App">
+            <h1>Hello</h1>
+            <button onClick={()=>{
+                loginToGithub().then(async ()=>{
+                    var fetchedAccesstoken = await getGithubAccessToken();
+                    if(fetchedAccesstoken){
+                        setAccessToken(fetchedAccesstoken)
+                    }
+                })
+            }}>Login to github</button>
+
+            {!accessToken && <div>Missing accesstoken</div>}
+            {accessToken && <div>Accesstoken: {accessToken}</div>}
+        </div>
+    )
 }
