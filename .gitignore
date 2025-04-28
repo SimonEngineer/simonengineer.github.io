@@ -21,3 +21,6 @@ yarn.lock
 /blob-report/
 /playwright/.cache/
 .idea
+dist
+dist-ssr
+*.local
