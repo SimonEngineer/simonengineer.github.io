@@ -35,7 +35,12 @@ jobs:
       - name: Install Node.js dependencies
         run: npm install
       - name: Build the site
+        env:
+          VITE_GITHUB_DATA_REPO: ${{ secrets.VITE_GITHUB_DATA_REPO }}
+          VITE_GITHUB_DATA_REPO_OWNER: ${{ secrets.VITE_GITHUB_DATA_REPO_OWNER }}
         run: |
+          echo "VITE_GITHUB_DATA_REPO=$VITE_GITHUB_DATA_REPO" >> .env
+          echo "VITE_GITHUB_DATA_REPO_OWNER=$VITE_GITHUB_DATA_REPO_OWNER" >> .env
           npm run build 
       - name: Setup Pages
         uses: actions/configure-pages@v5
