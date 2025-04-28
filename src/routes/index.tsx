@@ -18,6 +18,8 @@ export const Route = createFileRoute('/')({
     // }
 })
 
+let octokit = new Octokit();
+
 const localStoragePatKey = "GitHubPatToken"
 const githubDataRepo = import.meta.env.VITE_GITHUB_DATA_REPO;
 const githubDataRepoOwner = import.meta.env.VITE_GITHUB_DATA_REPO_OWNER;
@@ -27,38 +29,64 @@ type GithubPatInfo = {
     token: string | null,
 }
 
+type GithubFileInfo = {
+    type: "file" | "directory",
+    path: string
+}
+type GithubFileContent = GithubFileInfo & {
+    files?: GithubFileInfo[],
+    fileContent?: string
+}
 
 function App() {
-    // const searchParams = Route.useSearch()
-    // const router = useRouter()
-    // console.log("Index searchParams: ",searchParams)
-    // //Because the pages need to be in separate files because of GitHub pages, need this redirect to hand over the control back to tanstack router
-    // if(searchParams.githubPagesRedirectPath != null){
-    //     const {githubPagesRedirectPath, ...rest} = searchParams
-    //     router.navigate({to: githubPagesRedirectPath, search: rest })
-    //     // console.log("Search params: ",searchParams)
-    //     // console.log("githubPagesRedirectPath: ",githubPagesRedirectPath)
-    //     // console.log("rest: ",rest)
-    //     return
-    //     // return <div>
-    //     //
-    //     //     <button onClick={()=>{ router.navigate({to: githubPagesRedirectPath, search: rest })}}>Redirect</button>
-    //     // </div>;
-    // }
+
     const [patInput, setPatInput] = useState<string>()
     const [pat, setPat] = useState<GithubPatInfo>({checkedLocalStorage: false, token: null})
+    const [treeData, setTreeData] = useState<GithubFileContent[]>([])
 
     useEffect(() => {
         if (pat.checkedLocalStorage) return
         const localStorageToken = localStorage.getItem(localStoragePatKey)
         setPat({checkedLocalStorage: true, token: localStorageToken ?? null})
+        octokit = new Octokit({auth: localStorageToken})
     }, [])
+
+
+    async function GetTreeDataFileContent(path: string): Promise<GithubFileContent> {
+        const {data} = await octokit.rest.repos.getContent({
+            owner: githubDataRepoOwner,
+            repo: githubDataRepo,
+            path: path
+        });
+
+        // If it's a file, the content will be base64 encoded
+        if (Array.isArray(data)) {
+            console.log("Directory: ", data)
+
+            return {
+                type: "directory",
+                files: data.map( d=>{
+                    const fileType: "file" | "directory" = d.type == 'file' ? "file" : "directory";
+                    return {path:d.path, type: fileType}}),
+                path:path
+            }
+        } else {
+            // @ts-ignore
+            const content = atob(data.content);
+
+            console.log(content);
+            return {fileContent: content, type: 'file',path:path};
+        }
+
+    }
+
+
     return (
         <div className="App">
             <h1>Setup github pat</h1>
             <button onClick={() => {
                 localStorage.removeItem(localStoragePatKey)
-                setPat(p=>({...p, token: null}))
+                setPat(p => ({...p, token: null}))
             }}>Clear pat
             </button>
 
@@ -70,15 +98,14 @@ function App() {
                     if (!patInput) return
                     localStorage.setItem(localStoragePatKey, patInput)
                     setPat(p => ({...p, token: patInput}))
+                    octokit = new Octokit({auth: patInput})
                 }}>Save pat
                 </button>
             </>)}
 
             <button onClick={async () => {
                 console.log("PAt: ", pat)
-                const octokit = new Octokit({
-                    auth: pat.token, // Use the PAT for authentication
-                });
+
                 const data = await octokit.git.getRef({
                     owner: githubDataRepoOwner,
                     repo: githubDataRepo,
@@ -90,6 +117,36 @@ function App() {
             }}> Test github
             </button>
             <Link to={"/about"}>To about</Link>
+            <div>
+                <button onClick={async () => {
+
+                    var tree = await octokit.git.getTree({
+                        owner: githubDataRepoOwner,
+                        repo: githubDataRepo,
+                        tree_sha: `heads/main`
+                    });
+                    console.log("Tree: ", tree)
+                    const treeDt: GithubFileContent[] = []
+                    for (const treeElement of tree.data.tree) {
+                        var data = await GetTreeDataFileContent(treeElement.path!);
+                        console.log("Path: ", treeElement.path);
+                        console.log("Data: ", data);
+                        treeDt.push(data);
+                    }
+                    setTreeData(treeDt)
+                }}>GetFiles
+                </button>
+                <div>
+                    {treeData.map(x => <div key={x.path}>
+                        <div>Type: {x.type} - Path: {x.path}</div>
+                        {x.type == "directory" && <div style={{paddingLeft: '10px'}}>
+                            {x.files?.map((d) => <div key={d.path}>Type: {d.type} - Path: {d.path}</div>)}
+
+                        </div>}
+
+                    </div>)}
+                </div>
+            </div>
 
 
         </div>
