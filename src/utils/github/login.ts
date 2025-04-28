@@ -1,5 +1,5 @@
 const clientId = 'Ov23liyzz1YTD4vxz4NH';
-const redirectUri = 'https://simonengineer.github.io/simonengineer.portfolio/auth';
+const redirectUri = 'https://simonengineer.github.io';
 const scope = 'repo'; // You need "repo" scope to create PRs
 
 // Step 1: Generate code_verifier and code_challenge
