@@ -7,8 +7,8 @@ export const Route = createFileRoute('/')({
 })
 
 const localStoragePatKey = "GitHubPatToken"
-const githubDataRepo = import.meta.env.VITE_GITHUB_DATA_REPO!;
-const githubDataRepoOwner = import.meta.env.VITE_GITHUB_DATA_REPO_OWNER!;
+const githubDataRepo = import.meta.env.VITE_GITHUB_DATA_REPO;
+const githubDataRepoOwner = import.meta.env.VITE_GITHUB_DATA_REPO_OWNER;
 
 type GithubPatInfo = {
     checkedLocalStorage: boolean,
@@ -61,6 +61,10 @@ function App() {
                 console.log("Authed: ", authed)
             }}> Test github
             </button>
+
+
+            <div>Repo: {githubDataRepo}</div>
+            <div>RepoOwner: {githubDataRepoOwner}</div>
 
 
         </div>
