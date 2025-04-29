@@ -1,8 +1,9 @@
-import {Outlet, createRootRoute, redirect} from '@tanstack/react-router'
+import {Outlet, redirect, createRootRouteWithContext} from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import {unknown} from "zod";
+import type {RouterContext} from "@/main.tsx";
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<RouterContext>()({
   component: () => (
     <>
       <Outlet />

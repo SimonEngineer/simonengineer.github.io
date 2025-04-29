@@ -7,11 +7,23 @@ import { routeTree } from './routeTree.gen'
 
 import './styles.css'
 import reportWebVitals from './reportWebVitals.ts'
+import {Octokit} from "@octokit/rest";
+import {GetStoredPat} from "@/utils/github/githubHandler.ts";
+
+export interface RouterContext {
+  octokit: Octokit,
+  someData?:string
+}
+
+
 
 // Create a new router instance
 const router = createRouter({
   routeTree,
-  context: {},
+  context: {
+    octokit: new Octokit({auth:GetStoredPat()}),
+    someData: "initialData"
+  },
   defaultPreload: 'intent',
   scrollRestoration: true,
   defaultStructuralSharing: true,
