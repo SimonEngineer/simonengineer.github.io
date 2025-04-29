@@ -6,7 +6,26 @@
     padding: 2rem;
 }
 
-/* Markdown container */
+/* Editor section */
+.editor-container {
+    width: 100%;
+    height: 100%;
+    background-color: #1e1e1e;
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+}
+
+/* Preview section */
+.preview-container {
+    width: 45%;
+    background-color: #1e1e1e;
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+}
+
+/*!* Markdown container *!*/
 .markdown-body {
     background-color: #1e1e1e;
     max-width: 800px;
