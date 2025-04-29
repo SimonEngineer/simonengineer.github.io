@@ -13,9 +13,10 @@
 import { Route as rootRoute } from './routes/__root'
 import { Route as ConfigureImport } from './routes/configure'
 import { Route as AuthImport } from './routes/auth'
-import { Route as AboutImport } from './routes/about'
 import { Route as IndexImport } from './routes/index'
+import { Route as AboutIndexImport } from './routes/about/index'
 import { Route as TestTestpathImport } from './routes/test/testpath'
+import { Route as AboutEditImport } from './routes/about/edit'
 
 // Create/Update Routes
 
@@ -31,21 +32,27 @@ const AuthRoute = AuthImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const AboutRoute = AboutImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => rootRoute,
-} as any)
-
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRoute,
 } as any)
 
+const AboutIndexRoute = AboutIndexImport.update({
+  id: '/about/',
+  path: '/about/',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const TestTestpathRoute = TestTestpathImport.update({
   id: '/test/testpath',
   path: '/test/testpath',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const AboutEditRoute = AboutEditImport.update({
+  id: '/about/edit',
+  path: '/about/edit',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -58,13 +65,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutImport
       parentRoute: typeof rootRoute
     }
     '/auth': {
@@ -81,11 +81,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConfigureImport
       parentRoute: typeof rootRoute
     }
+    '/about/edit': {
+      id: '/about/edit'
+      path: '/about/edit'
+      fullPath: '/about/edit'
+      preLoaderRoute: typeof AboutEditImport
+      parentRoute: typeof rootRoute
+    }
     '/test/testpath': {
       id: '/test/testpath'
       path: '/test/testpath'
       fullPath: '/test/testpath'
       preLoaderRoute: typeof TestTestpathImport
+      parentRoute: typeof rootRoute
+    }
+    '/about/': {
+      id: '/about/'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutIndexImport
       parentRoute: typeof rootRoute
     }
   }
@@ -95,52 +109,70 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/configure': typeof ConfigureRoute
+  '/about/edit': typeof AboutEditRoute
   '/test/testpath': typeof TestTestpathRoute
+  '/about': typeof AboutIndexRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/configure': typeof ConfigureRoute
+  '/about/edit': typeof AboutEditRoute
   '/test/testpath': typeof TestTestpathRoute
+  '/about': typeof AboutIndexRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/configure': typeof ConfigureRoute
+  '/about/edit': typeof AboutEditRoute
   '/test/testpath': typeof TestTestpathRoute
+  '/about/': typeof AboutIndexRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/auth' | '/configure' | '/test/testpath'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/configure'
+    | '/about/edit'
+    | '/test/testpath'
+    | '/about'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/auth' | '/configure' | '/test/testpath'
-  id: '__root__' | '/' | '/about' | '/auth' | '/configure' | '/test/testpath'
+  to: '/' | '/auth' | '/configure' | '/about/edit' | '/test/testpath' | '/about'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/configure'
+    | '/about/edit'
+    | '/test/testpath'
+    | '/about/'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
   ConfigureRoute: typeof ConfigureRoute
+  AboutEditRoute: typeof AboutEditRoute
   TestTestpathRoute: typeof TestTestpathRoute
+  AboutIndexRoute: typeof AboutIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
   ConfigureRoute: ConfigureRoute,
+  AboutEditRoute: AboutEditRoute,
   TestTestpathRoute: TestTestpathRoute,
+  AboutIndexRoute: AboutIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -154,17 +186,15 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/about",
         "/auth",
         "/configure",
-        "/test/testpath"
+        "/about/edit",
+        "/test/testpath",
+        "/about/"
       ]
     },
     "/": {
       "filePath": "index.tsx"
-    },
-    "/about": {
-      "filePath": "about.tsx"
     },
     "/auth": {
       "filePath": "auth.tsx"
@@ -172,8 +202,14 @@ export const routeTree = rootRoute
     "/configure": {
       "filePath": "configure.tsx"
     },
+    "/about/edit": {
+      "filePath": "about/edit.tsx"
+    },
     "/test/testpath": {
       "filePath": "test/testpath.tsx"
+    },
+    "/about/": {
+      "filePath": "about/index.tsx"
     }
   }
 }
