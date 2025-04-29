@@ -1,7 +1,14 @@
 
-body,html {
-  background-color: #322c2c;
-  color: white;
+/*.App {*/
+/*  background-color: #322c2c;*/
+/*  color: white;*/
 
+/*}*/
+
+body {
+    background-color: #1a1a1a;
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, sans-serif;
+    color: #d4d4d4;
 }
-

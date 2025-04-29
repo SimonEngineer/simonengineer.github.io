@@ -1,0 +1,27 @@
+
+/* Flexbox centering */
+.markdown-container {
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+}
+
+/* Markdown container */
+.markdown-body {
+    background-color: #1e1e1e;
+    max-width: 800px;
+    width: 100%;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+    line-height: 1.7;
+}
+
+/* Optional styling for links, code blocks, etc. */
+.markdown-body a {
+    color: #61dafb;
+}
+.markdown-body pre {
+    overflow-x: auto;
+    border-radius: 6px;
+}
