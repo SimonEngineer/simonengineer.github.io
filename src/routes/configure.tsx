@@ -3,7 +3,7 @@ import {Octokit} from "@octokit/rest";
 import {useState} from "react";
 import {
     DeletePat,
-    GetStoredPat, githubOwner, githubRepo,
+    GetStoredPat, githubOwner, GitHubRepo, githubRepo,
     StorePat
 } from "@/utils/github/githubHandler.ts";
 
@@ -36,9 +36,11 @@ function RouteComponent() {
         <button onClick={() => {
             DeletePat()
             setPat(p => ({...p, token: null}))
+            const unAuthOctokit = new Octokit({auth: null})
             rtouter.update({
                 context: {
-                    octokit: new Octokit({auth: null})
+                    octokit: unAuthOctokit,
+                    githubRepo: new GitHubRepo(unAuthOctokit),
                 }
             })
             rtouter.invalidate()
@@ -54,9 +56,11 @@ function RouteComponent() {
                 if (!patInput) return
                 StorePat(patInput)
                 setPat(p => ({...p, token: patInput}))
+                const updatedOctokit = new Octokit({auth: patInput})
                 rtouter.update({
                     context: {
-                        octokit: new Octokit({auth: patInput})
+                        octokit: updatedOctokit,
+                        githubRepo: new GitHubRepo(updatedOctokit)
                     }
                 })
                 rtouter.invalidate()
