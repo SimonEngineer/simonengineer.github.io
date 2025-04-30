@@ -78,11 +78,17 @@ projects/
  ├── meta.json  
  └── project-a/ 
    ├── meta.json 
-   ├── sections.json 
-   └── markdown/
-     ├── text-a.md 
-     └── text-b.md 
-  
+   ├── pages-meta.json
+   ├── page-sections/
+   │  ├── page-a-sections.json
+   │  └── page-b-sections.json  
+   └── content/
+      ├── markdown/
+      │  ├── text-a.md 
+      │  └── text-b.md 
+      └── images/
+         ├── image-a.jpeg 
+         └── image-b.jpeg
 ```
 
 ## Projects meta data
@@ -105,18 +111,36 @@ File "projects/{project-name}/meta.json" contains metadata about the project:
 }
 ```
 
-## Sections
-File "projects/{project-name}/sections.json" contains information regarding the rendering/displaying of the project on the page:
+## Page-meta / General subject
+File "projects/{project-name}/pages-meta.json" contains information regarding the pages for the given project:
 ```json
 {
   "sequenceId": 0,
-  "sectionTitle": "project-a",
-  "display": true,
-  "type": "md | image | file | link | code | etc",
-  "contentLocation": "path | null", 
-  "contentLocations": ["path | null (contentLocations is null or empty)"], 
-  "content": "content | null"
+  "pageName": "page-a",
+  "active": true,
+  "type": "not included for now, add if needed later"
 }
+```
+#### Page SequenceId
+The order in which the page should be displayed, in increasing order
+
+
+## Page-sections
+File "projects/{project-name}/page-sections/page-{pageName}-sections.json" contains information regarding the rendering/displaying of the project on the page:
+```json
+[
+  {
+    "sequenceId": 0,
+    "sectionTitle": "project-a",
+    "display": true,
+    "type": "md | image | file | link | code | etc",
+    "contentLocation": "path | null",
+    "contentLocations": [
+      "path | null (contentLocations is null or empty)"
+    ],
+    "content": "content | null"
+  }
+]
 ```
 #### SequenceId
 The order in which the section should be displayed, in increasing order
