@@ -75,9 +75,9 @@ The data storing structure in the Data repo is:
 
 ```
 projects/
- ├── meta.json  
+ ├── projects-meta.json  
  └── project-a/ 
-   ├── meta.json 
+   ├── project-meta.json 
    ├── pages-meta.json
    ├── page-sections/
    │  ├── page-a-sections.json
@@ -94,20 +94,44 @@ projects/
 ## Projects meta data
 File "projects/meta.json" contains metadata about the projects that are created:
 ```json
-[
-  {
-    "name": "project-a"
-  }
-]
+{
+  "projects": [
+    {
+      "id": 1,
+      "name": "project-a",
+      "active": true,
+      "revision": "rev:3",
+      "projectType": "software | hardware | mechanical | electrical"
+    }
+  ]
+}
+```
+
+```typescript
+interface ProjectsMeta {
+    projects: ProjectMeta[];
+}
 ```
 ## Project meta data
 File "projects/{project-name}/meta.json" contains metadata about the project:
 ```json
 {
+  "id": 1,
   "name": "project-a",
   "active": true,
   "revision": "rev:3",
-  "project-type": "software | hardware | mechanical | electrical" 
+  "projectType": "software | hardware | mechanical | electrical" 
+}
+```
+```typescript
+type ProjectRevision = `rev:${number}`;
+
+interface ProjectMeta {
+    id: number;
+    name: string;
+    active: boolean;
+    revision: ProjectRevision;
+    projectType:string;
 }
 ```
 
@@ -115,11 +139,32 @@ File "projects/{project-name}/meta.json" contains metadata about the project:
 File "projects/{project-name}/pages-meta.json" contains information regarding the pages for the given project:
 ```json
 {
-  "sequenceId": 0,
-  "pageName": "page-a",
-  "active": true,
-  "type": "not included for now, add if needed later"
+  "id": 1,
+  "projectId": 1,
+  "pages": [
+    {
+      "sequenceId": 0,
+      "pageName": "page-a",
+      "active": true,
+      "type": "not included for now, add if needed later"
+    }
+  ]
 }
+```
+```typescript
+interface PageMeta{
+    id: number;
+    sequenceId: number;
+    pageName: string;
+    active: boolean;
+}
+
+interface PagesMeta {
+    id: number;
+    projectId: number;
+    pages: PageMeta[];
+}
+
 ```
 #### Page SequenceId
 The order in which the page should be displayed, in increasing order
@@ -128,25 +173,45 @@ The order in which the page should be displayed, in increasing order
 ## Page-sections
 File "projects/{project-name}/page-sections/page-{pageName}-sections.json" contains information regarding the rendering/displaying of the project on the page:
 ```json
-[
-  {
-    "sequenceId": 0,
-    "sectionTitle": "project-a",
-    "display": true,
-    "type": "md | image | file | link | code | etc",
-    "contentLocation": "path | null",
-    "contentLocations": [
-      "path | null (contentLocations is null or empty)"
-    ],
-    "content": "content | null"
-  }
-]
+{
+  "id": 1,
+  "pageId": 1,
+  "sections": [
+    {
+      "sequenceId": 0,
+      "sectionTitle": "project-a",
+      "active": true,
+      "type": "md | image | file | link | code | etc",
+      "contentLocation": "path"
+    }
+  ]
+}
+```
+```typescript
+interface PageSection {
+    id: number;
+    sequenceId: number;
+    sectionTitle: string;
+    active: boolean;
+    type: string;
+    contentLocation:string;
+}
+
+interface PageSectionsMeta {
+    id: number;
+    pageId: number;
+    sections: PageSection[];
+}
 ```
 #### SequenceId
 The order in which the section should be displayed, in increasing order
 #### ContentLocation
 The location in the project folder where the content is located: path is relative to "project-name"
-#### ContentLocations
-The locations in the project folder where the content is located if there is multiple resources that is included
-#### Content
-Simple content to be displayed, if it is needed  
+
+[//]: # (Todo: Maybe add later)
+[//]: # (#### ContentLocations)
+
+[//]: # (The locations in the project folder where the content is located if there is multiple resources that is included)
+[//]: # (#### Content)
+
+[//]: # (Simple content to be displayed, if it is needed  )
