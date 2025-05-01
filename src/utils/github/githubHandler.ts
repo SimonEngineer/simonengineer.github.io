@@ -215,7 +215,7 @@ export class GitHubRepo {
     // }
 
 
-    public async CreateOrUpdateFiles(branch:string, files: FileInfo[]) {
+    public async CreateOrUpdateFiles(branch:string, files: FileInfo[], message = "") {
         const refInfo = `heads/${branch}`
         const refData = await this.octokit.git.getRef({
             ...this.GithubInfo,
@@ -247,7 +247,7 @@ export class GitHubRepo {
             });
         const commit = await this.octokit.git.createCommit({
             ...this.GithubInfo,
-            message: 'updated files',
+            message: message,
             tree: tree.data.sha,
             parents: [latestCommitSha],
         });

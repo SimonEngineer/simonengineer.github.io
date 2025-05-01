@@ -1,4 +1,4 @@
-import type {FileInfo, GitHubRepo, ProjectIdentifier} from "@/utils/github/githubHandler.ts";
+import type {FileInfo, GitHubRepo} from "@/utils/github/githubHandler.ts";
 import type {ProjectMeta, ProjectsMeta} from "@/models/ProjectMeta.ts";
 import type {PagesMeta} from "@/models/PagesMeta.ts";
 
@@ -18,9 +18,9 @@ export class ProjectHandler{
         return JSON.parse(projectsData) as ProjectsMeta
     }
 
-    private GetRevBranchName(project: ProjectIdentifier): string {
-        return `${project.projectId}_rev_${project.revision}`
-    };
+    // private GetRevBranchName(project: ProjectIdentifier): string {
+    //     return `${project.projectId}_rev_${project.revision}`
+    // };
 
     public async GetCreateProject(projectName:string, projectType:string) {
         const projectsMeta = await this.GetProjects() ?? {
@@ -28,7 +28,7 @@ export class ProjectHandler{
         }
 
         const projectsMaxId = Math.max(...projectsMeta.projects.map(x=>x.id))
-        const newProjectId = projectsMaxId <= 0 ? 0 : projectsMaxId + 1;
+        const newProjectId = isFinite(projectsMaxId) ? projectsMaxId + 1 : 0;
         const projectMeta: ProjectMeta = {
             id: newProjectId,
             name: projectName,
@@ -36,6 +36,7 @@ export class ProjectHandler{
             active: true,
             revision:"rev_0"
         }
+
         projectsMeta.projects.push(projectMeta);
         projectsMeta.projects = projectsMeta.projects.sort((a,b)=>a.id - b.id)
 
@@ -58,15 +59,8 @@ export class ProjectHandler{
                 content: JSON.stringify(pagesMeta,null, 2),
             }
         ]
-
-        const project = {projectId: newProjectId, revision:0};
-        const createProjectBranch = `revisions/${this.GetRevBranchName(project)}`
-        await this.GitHubRepo.CreateBranch(createProjectBranch)
-        await this.GitHubRepo.CreateOrUpdateFiles(createProjectBranch,files)
-        await this.GitHubRepo.MergeBranchToMain(createProjectBranch,
-            `Merge revision ${project.revision} of project ${project.projectId} into main`,
-            `Auto-generated PR to merge ${project.revision} of project ${project.projectId} into main`,)
-
+        //Todo: Consider adding back the branch, upload, pr, merge flow, for safety to prevent directly writing to main
+        await this.GitHubRepo.CreateOrUpdateFiles(this._mainBranch,files, `Uploaded filed to create project "${projectName}" - Id: ${newProjectId}`)
 
     }
 }
