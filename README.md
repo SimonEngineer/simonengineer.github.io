@@ -100,7 +100,7 @@ File "projects/meta.json" contains metadata about the projects that are created:
       "id": 1,
       "name": "project-a",
       "active": true,
-      "revision": "rev:3",
+      "revision": "rev_3",
       "projectType": "software | hardware | mechanical | electrical"
     }
   ]
@@ -119,12 +119,12 @@ File "projects/{project-name}/meta.json" contains metadata about the project:
   "id": 1,
   "name": "project-a",
   "active": true,
-  "revision": "rev:3",
+  "revision": "rev_3",
   "projectType": "software | hardware | mechanical | electrical" 
 }
 ```
 ```typescript
-type ProjectRevision = `rev:${number}`;
+type ProjectRevision = `rev_${number}`;
 
 interface ProjectMeta {
     id: number;
