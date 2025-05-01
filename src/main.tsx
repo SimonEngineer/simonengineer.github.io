@@ -9,14 +9,18 @@ import './styles.css'
 import reportWebVitals from './reportWebVitals.ts'
 import {Octokit} from "@octokit/rest";
 import {GetStoredPat, GitHubRepo} from "@/utils/github/githubHandler.ts";
+import {ProjectHandler} from "@/utils/ProjectUtils/ProjectHandler.ts";
 
 export interface RouterContext {
   octokit: Octokit,
   someData?:string,
   githubRepo: GitHubRepo,
+  projectHandler: ProjectHandler,
 }
 
 const octokit = new Octokit({auth:GetStoredPat()})
+const githubRepo =  new GitHubRepo(octokit);
+const projectHandler = new ProjectHandler(githubRepo)
 
 // Create a new router instance
 const router = createRouter({
@@ -24,7 +28,8 @@ const router = createRouter({
   context: {
     octokit: octokit,
     someData: "initialData",
-    githubRepo: new GitHubRepo(octokit),
+    githubRepo: githubRepo,
+    projectHandler: projectHandler,
   },
   defaultPreload: 'intent',
   scrollRestoration: true,

@@ -7,7 +7,6 @@ export interface PageMeta{
 }
 
 export interface PagesMeta {
-    id: number;
     projectId: number;
     pages: PageMeta[];
 }

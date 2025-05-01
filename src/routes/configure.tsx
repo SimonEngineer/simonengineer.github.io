@@ -6,6 +6,7 @@ import {
     GetStoredPat, githubOwner, GitHubRepo, githubRepo,
     StorePat
 } from "@/utils/github/githubHandler.ts";
+import {ProjectHandler} from "@/utils/ProjectUtils/ProjectHandler.ts";
 
 export const Route = createFileRoute('/configure')({
     component: RouteComponent,
@@ -37,10 +38,13 @@ function RouteComponent() {
             DeletePat()
             setPat(p => ({...p, token: null}))
             const unAuthOctokit = new Octokit({auth: null})
+            const githubRepo = new GitHubRepo(unAuthOctokit);
+            const projectHandler = new ProjectHandler(githubRepo)
             rtouter.update({
                 context: {
                     octokit: unAuthOctokit,
-                    githubRepo: new GitHubRepo(unAuthOctokit),
+                    githubRepo: githubRepo,
+                    projectHandler: projectHandler,
                 }
             })
             rtouter.invalidate()
@@ -57,10 +61,13 @@ function RouteComponent() {
                 StorePat(patInput)
                 setPat(p => ({...p, token: patInput}))
                 const updatedOctokit = new Octokit({auth: patInput})
+                const gitHubRepo =  new GitHubRepo(updatedOctokit)
+                const projectHandler = new ProjectHandler(gitHubRepo)
                 rtouter.update({
                     context: {
                         octokit: updatedOctokit,
-                        githubRepo: new GitHubRepo(updatedOctokit)
+                        githubRepo:githubRepo,
+                        projectHandler: projectHandler,
                     }
                 })
                 rtouter.invalidate()

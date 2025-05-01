@@ -19,7 +19,7 @@ function App() {
         <div style={{padding: "1rem" }}>
             <button onClick={async () => {
                 const fetchedProjects = await routerContext.githubRepo.GetProjects()
-                setProjects(fetchedProjects)
+                setProjects(fetchedProjects?.projects.map(x=>x.name) ?? [])
             }}>
                 Get projects
             </button>
@@ -39,7 +39,7 @@ function App() {
             </div>
             <input type={"number"} value={newBranchRevision} onChange={e => setNewBranchRevision(Number(e.target.value))}/>
             <button onClick={async () => {
-                const newBranch = await routerContext.githubRepo.CreateProjectRevision(1,newBranchRevision)
+                const newBranch = await routerContext.githubRepo.CreateProjectRevision({projectId:1, revision:newBranchRevision})
                 setNewBranchRef(newBranch)
             }}>
                 Create branch
@@ -51,7 +51,7 @@ function App() {
             <label>Merge revision</label>
             <input type={"number"} value={mergeRev} onChange={e => setMergeRev(Number(e.target.value))}/>
             <button onClick={async () => {
-                const resMergeMessage = await routerContext.githubRepo.MergeRevisionToMain(1,mergeRev)
+                const resMergeMessage = await routerContext.githubRepo.MergeBranchToMain(`revisions/1_rev_${mergeRev}`,"Test merge","Test merge")
                 setMergeMessage(resMergeMessage)
             }}>
                 Merge revision
@@ -63,7 +63,7 @@ function App() {
             <label>Delete rev branch</label>
             <input type={"number"} value={deleteRevBranch} onChange={e => setDeleteRevBranch(Number(e.target.value))}/>
             <button onClick={async () => {
-                 await routerContext.githubRepo.DeleteRevisionBranch(1,deleteRevBranch)
+                 await routerContext.githubRepo.DeleteRevisionBranch({projectId:1,revision:deleteRevBranch})
 
             }}>
                 Delete revision

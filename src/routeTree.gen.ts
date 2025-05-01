@@ -14,6 +14,7 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as ConfigureImport } from './routes/configure'
 import { Route as AuthImport } from './routes/auth'
 import { Route as IndexImport } from './routes/index'
+import { Route as ProjectsIndexImport } from './routes/projects/index'
 import { Route as AboutIndexImport } from './routes/about/index'
 import { Route as TestTestpathImport } from './routes/test/testpath'
 import { Route as AboutEditImport } from './routes/about/edit'
@@ -35,6 +36,12 @@ const AuthRoute = AuthImport.update({
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const ProjectsIndexRoute = ProjectsIndexImport.update({
+  id: '/projects/',
+  path: '/projects/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -102,6 +109,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutIndexImport
       parentRoute: typeof rootRoute
     }
+    '/projects/': {
+      id: '/projects/'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof ProjectsIndexImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -114,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/about/edit': typeof AboutEditRoute
   '/test/testpath': typeof TestTestpathRoute
   '/about': typeof AboutIndexRoute
+  '/projects': typeof ProjectsIndexRoute
 }
 
 export interface FileRoutesByTo {
@@ -123,6 +138,7 @@ export interface FileRoutesByTo {
   '/about/edit': typeof AboutEditRoute
   '/test/testpath': typeof TestTestpathRoute
   '/about': typeof AboutIndexRoute
+  '/projects': typeof ProjectsIndexRoute
 }
 
 export interface FileRoutesById {
@@ -133,6 +149,7 @@ export interface FileRoutesById {
   '/about/edit': typeof AboutEditRoute
   '/test/testpath': typeof TestTestpathRoute
   '/about/': typeof AboutIndexRoute
+  '/projects/': typeof ProjectsIndexRoute
 }
 
 export interface FileRouteTypes {
@@ -144,8 +161,16 @@ export interface FileRouteTypes {
     | '/about/edit'
     | '/test/testpath'
     | '/about'
+    | '/projects'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/configure' | '/about/edit' | '/test/testpath' | '/about'
+  to:
+    | '/'
+    | '/auth'
+    | '/configure'
+    | '/about/edit'
+    | '/test/testpath'
+    | '/about'
+    | '/projects'
   id:
     | '__root__'
     | '/'
@@ -154,6 +179,7 @@ export interface FileRouteTypes {
     | '/about/edit'
     | '/test/testpath'
     | '/about/'
+    | '/projects/'
   fileRoutesById: FileRoutesById
 }
 
@@ -164,6 +190,7 @@ export interface RootRouteChildren {
   AboutEditRoute: typeof AboutEditRoute
   TestTestpathRoute: typeof TestTestpathRoute
   AboutIndexRoute: typeof AboutIndexRoute
+  ProjectsIndexRoute: typeof ProjectsIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -173,6 +200,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutEditRoute: AboutEditRoute,
   TestTestpathRoute: TestTestpathRoute,
   AboutIndexRoute: AboutIndexRoute,
+  ProjectsIndexRoute: ProjectsIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -190,7 +218,8 @@ export const routeTree = rootRoute
         "/configure",
         "/about/edit",
         "/test/testpath",
-        "/about/"
+        "/about/",
+        "/projects/"
       ]
     },
     "/": {
@@ -210,6 +239,9 @@ export const routeTree = rootRoute
     },
     "/about/": {
       "filePath": "about/index.tsx"
+    },
+    "/projects/": {
+      "filePath": "projects/index.tsx"
     }
   }
 }

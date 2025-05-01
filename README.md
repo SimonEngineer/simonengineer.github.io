@@ -76,12 +76,12 @@ The data storing structure in the Data repo is:
 ```
 projects/
  ├── projects-meta.json  
- └── project-a/ 
+ └── project-{id}/ 
    ├── project-meta.json 
    ├── pages-meta.json
    ├── page-sections/
-   │  ├── page-a-sections.json
-   │  └── page-b-sections.json  
+   │  ├── page-{id}-sections.json
+   │  └── page-{id}-sections.json  
    └── content/
       ├── markdown/
       │  ├── text-a.md 
@@ -139,7 +139,6 @@ interface ProjectMeta {
 File "projects/{project-name}/pages-meta.json" contains information regarding the pages for the given project:
 ```json
 {
-  "id": 1,
   "projectId": 1,
   "pages": [
     {
@@ -160,7 +159,6 @@ interface PageMeta{
 }
 
 interface PagesMeta {
-    id: number;
     projectId: number;
     pages: PageMeta[];
 }
