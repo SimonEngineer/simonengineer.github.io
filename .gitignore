@@ -24,3 +24,4 @@ dist
 dist-ssr
 *.local
 scripts/*.js
+scripts/githubPagesServingSimulator/dist-server/*
