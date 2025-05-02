@@ -16,7 +16,7 @@ function App() {
     const [mergeRev, setMergeRev] = useState<number>(0)
     const [mergeMessage, setMergeMessage] = useState<string>()
     return (
-        <div style={{padding: "1rem" }}>
+        <div className={"bg-"} style={{padding: "1rem" }}>
             <button onClick={async () => {
                 const fetchedProjects = await routerContext.githubRepo.GetProjects()
                 setProjects(fetchedProjects?.projects.map(x=>x.name) ?? [])
