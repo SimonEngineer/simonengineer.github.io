@@ -3,10 +3,17 @@ import {Octokit} from "@octokit/rest";
 import {useState} from "react";
 import {
     DeletePat,
-    GetStoredPat, githubOwner, GitHubRepo, githubRepo,
+    GetStoredPat, defaultGithubOwner, GitHubRepo, defaultGithubDataRepo, type GitHubRepoInfo,
     StorePat
 } from "@/utils/github/githubHandler.ts";
 import {ProjectHandler} from "@/utils/ProjectUtils/ProjectHandler.ts";
+import {
+    GetWeightTrackerRepoInfo,
+    StoreWeightTrackerRepoInfo,
+    WeightTrackerHandler
+} from "@/utils/weightTracker/weightTrackerHandler.ts";
+import {Input} from "@/components/ui/input.tsx";
+import {Button} from "@/components/ui/button.tsx";
 
 export const Route = createFileRoute('/configure')({
     component: RouteComponent,
@@ -18,14 +25,20 @@ type GithubPatInfo = {
     checkedLocalStorage: boolean,
     token: string | null,
 }
+type WeightTrackerRepoInfo = {
+    checkedLocalStorage: boolean,
+    repo: string | null
+}
 
 
 function RouteComponent() {
-    const r = Route.useRouteContext()
+    const routeContext = Route.useRouteContext()
     const rtouter = useRouter()
 
     const [patInput, setPatInput] = useState<string>()
     const [pat, setPat] = useState<GithubPatInfo>({checkedLocalStorage: true, token: GetStoredPat()})
+    const [weightTrackerRepoInfoInput, setWeightTrackerRepoInfoInput] = useState<string>()
+    const [weightTrackerRepoInfo, setWeightTrackerRepoInfo] = useState<WeightTrackerRepoInfo>({checkedLocalStorage: true, repo: GetWeightTrackerRepoInfo()?.repo ?? null})
     const [githubUserTest, setGithubUser] = useState<{ id: number, name: string }>()
     const [stringifiedTestRepoData, setstringifiedTestRepoData] = useState<string>()
 
@@ -34,67 +47,100 @@ function RouteComponent() {
     return <div className="App">
         <Link to={"/"} style={{color:"blue"}}>Home</Link>
         <h1>Configure github Personal Access Token (PAT)</h1>
-        <button onClick={() => {
+        <Button onClick={() => {
             DeletePat()
             setPat(p => ({...p, token: null}))
             const unAuthOctokit = new Octokit({auth: null})
-            const githubRepo = new GitHubRepo(unAuthOctokit);
-            const projectHandler = new ProjectHandler(githubRepo)
+            const githubRepoFactory = (repoInfo:GitHubRepoInfo)=> (new GitHubRepo(unAuthOctokit)).WithGithubInfo(repoInfo);
+            const projectHandler = new ProjectHandler(githubRepoFactory({repo: defaultGithubDataRepo,owner: defaultGithubOwner}))
+            const weightTrackerRepoInfo = GetWeightTrackerRepoInfo()
+            const weightTrackerHandler = new WeightTrackerHandler(githubRepoFactory({owner:weightTrackerRepoInfo?.owner ?? "",repo:weightTrackerRepoInfo?.repo ?? ""}))
             rtouter.update({
                 context: {
+                    ...routeContext,
                     octokit: unAuthOctokit,
-                    githubRepo: githubRepo,
+                    githubRepoFactory: githubRepoFactory,
                     projectHandler: projectHandler,
+                    weightTrackerHandler: weightTrackerHandler,
                 }
             })
             rtouter.invalidate()
         }}>Clear pat
-        </button>
+        </Button>
 
 
         {pat.checkedLocalStorage && !pat.token && (<>
-            <input placeholder={"Pat"} value={patInput}
+            <Input placeholder={"Pat"} value={patInput}
                    onChange={(e) => setPatInput(e.target.value)}/>
-            <button onClick={() => {
+            <Button onClick={() => {
 
                 if (!patInput) return
                 StorePat(patInput)
                 setPat(p => ({...p, token: patInput}))
                 const updatedOctokit = new Octokit({auth: patInput})
-                const gitHubRepo =  new GitHubRepo(updatedOctokit)
-                const projectHandler = new ProjectHandler(gitHubRepo)
+                const githubRepoFactory = (repoInfo:GitHubRepoInfo)=> (new GitHubRepo(updatedOctokit)).WithGithubInfo(repoInfo);
+                const projectHandler = new ProjectHandler(githubRepoFactory({repo: defaultGithubDataRepo,owner: defaultGithubOwner}))
+                const weightTrackerRepoInfo = GetWeightTrackerRepoInfo()
+                const weightTrackerHandler = new WeightTrackerHandler(githubRepoFactory({owner:weightTrackerRepoInfo?.owner ?? "",repo:weightTrackerRepoInfo?.repo ?? ""}))
+
                 rtouter.update({
                     context: {
+                        ...routeContext,
                         octokit: updatedOctokit,
-                        githubRepo:githubRepo,
+                        githubRepoFactory:githubRepoFactory,
                         projectHandler: projectHandler,
+                        weightTrackerHandler: weightTrackerHandler
                     }
                 })
                 rtouter.invalidate()
 
             }}>Save pat
-            </button>
+            </Button>
+        </>)}
+
+        {weightTrackerRepoInfo.checkedLocalStorage && !weightTrackerRepoInfo.repo && (<>
+
+            <Input placeholder={"Repo"} value={weightTrackerRepoInfoInput}
+                   onChange={(e) => setWeightTrackerRepoInfoInput(e.target.value)}/>
+            <Button onClick={() => {
+
+                if (!weightTrackerRepoInfoInput) return
+                const weightTrackerRepoInfoInMem = {owner: defaultGithubOwner,repo: weightTrackerRepoInfoInput}
+                StoreWeightTrackerRepoInfo(weightTrackerRepoInfoInMem)
+                setWeightTrackerRepoInfo(p => ({...p, repo: weightTrackerRepoInfoInput}))
+
+                const weightTrackerHandler = new WeightTrackerHandler(routeContext.githubRepoFactory(weightTrackerRepoInfoInMem))
+                rtouter.update({
+                    context: {
+                        ...routeContext,
+                        weightTrackerHandler: weightTrackerHandler
+                    }
+                })
+                rtouter.invalidate()
+
+            }}>Save repo
+            </Button>
         </>)}
 
         <div style={{display: 'flex', flexDirection: 'column', width: '50%'}}>
-            <button onClick={async () => {
-                const authedUser = await r.octokit.rest.users.getAuthenticated();
+            <Button onClick={async () => {
+                const authedUser = await routeContext.octokit.rest.users.getAuthenticated();
                 setGithubUser({id: authedUser.data.id, name: authedUser.data.name ?? ""})
 
             }}> Test get github user
-            </button>
+            </Button>
             {githubUserTest && <div>Github user id: {githubUserTest?.id} - Name: {githubUserTest?.name}</div>}
 
-            <button onClick={async () => {
-                const repoData = await r.octokit.git.getRef({
-                    owner: githubOwner,
-                    repo: githubRepo,
+            <Button onClick={async () => {
+                const repoData = await routeContext.octokit.git.getRef({
+                    owner: defaultGithubOwner,
+                    repo: defaultGithubDataRepo,
                     ref: `heads/main`,
                 });
                 setstringifiedTestRepoData(JSON.stringify(repoData.data, null, 2))
 
             }}> Test get github repo
-            </button>
+            </Button>
             {stringifiedTestRepoData && <div>{stringifiedTestRepoData}</div>}
         </div>
     </div>

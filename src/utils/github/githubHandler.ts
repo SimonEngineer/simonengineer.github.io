@@ -3,8 +3,8 @@ import type {ProjectsMeta} from "@/models/ProjectMeta.ts";
 
 const localStoragePatKey = "GitHubPatToken"
 const githubRepoProjectsKey = "projects"
-export const githubRepo = import.meta.env.VITE_GITHUB_DATA_REPO;
-export const githubOwner = import.meta.env.VITE_GITHUB_DATA_REPO_OWNER;
+export const defaultGithubDataRepo = import.meta.env.VITE_GITHUB_DATA_REPO;
+export const defaultGithubOwner = import.meta.env.VITE_GITHUB_DATA_REPO_OWNER;
 
 
 export type GithubFileInfo = {
@@ -32,8 +32,8 @@ export function DeletePat() {
 
 export async function GetTreeDataFileContent(path: string, octokit: Octokit): Promise<GithubFileContent> {
     const {data} = await octokit.rest.repos.getContent({
-        owner: githubOwner,
-        repo: githubRepo,
+        owner: defaultGithubOwner,
+        repo: defaultGithubDataRepo,
         path: path
     });
 
@@ -65,15 +65,29 @@ export type FileInfo = {
     content: string
 }
 
+export type GitHubRepoInfo =
+    {
+        owner: string,
+        repo: string
+    }
+
+
 export class GitHubRepo {
     private readonly octokit: Octokit;
-    private readonly GithubInfo: { owner: string, repo: string };
+    private GitHubRepoInfo:GitHubRepoInfo | null = null;
 
     constructor(octokit: Octokit) {
         this.octokit = octokit;
-        this.GithubInfo = {owner: githubOwner, repo: githubRepo};
     }
 
+    public WithGithubInfo(githubInfo: GitHubRepoInfo): GitHubRepo {
+        this.GitHubRepoInfo = githubInfo;
+        return this;
+    }
+
+    private AssertGithubInfoIsSet() {
+        if(!this.GitHubRepoInfo)throw new Error("GithubInfo is not set! Call method 'WithGithubInfo' with owner and repo");
+    }
     // public async GetProjects(): Promise<string[]> {
     //     const contentInProjectsFolder = await this.GetTreeDataFileContent(githubRepoProjectsKey)
     //     const projects = contentInProjectsFolder.files?.filter(x => x.type === "directory");
@@ -82,47 +96,62 @@ export class GitHubRepo {
     // }
     //Obsolete: Remove
     public async GetProjects(): Promise<ProjectsMeta | null> {
+        this.AssertGithubInfoIsSet();
         const projectsFile = await this.GetTreeDataFileContent("heads/main", `${githubRepoProjectsKey}/projects-meta.json`)
         if (projectsFile.type !== "file") throw new Error("projects-meta.json is not a file")
         if (projectsFile.fileContent == undefined) return null;
         return JSON.parse(projectsFile.fileContent) as ProjectsMeta
     }
 
-    public async GetFileContent(path: string, branch:string): Promise<string | null> {
+    public async GetFileContent(path: string, branch: string): Promise<string | null> {
+        this.AssertGithubInfoIsSet();
         const file = await this.GetTreeDataFileContent(`heads/${branch}`, `${githubRepoProjectsKey}/${path}`);
+        if (file.type !== "file") throw new Error(`Given path ${path} is not a file `)
+        if (file.fileContent == undefined) return null;
+        return file.fileContent;
+    }
+    public async GetFileContentNoPathPrefix(path: string, branch: string): Promise<string | null> {
+        this.AssertGithubInfoIsSet();
+        const file = await this.GetTreeDataFileContent(`heads/${branch}`, `${path}`);
         if (file.type !== "file") throw new Error(`Given path ${path} is not a file `)
         if (file.fileContent == undefined) return null;
         return file.fileContent;
     }
 
     public async GetBranches(): Promise<string[]> {
-        const data = await this.octokit.git.listMatchingRefs({...this.GithubInfo, ref: "heads"})
+        this.AssertGithubInfoIsSet();
+        const data = await this.octokit.git.listMatchingRefs({...this.GitHubRepoInfo!, ref: "heads"})
         return data.data.map(p => p.ref.replace("refs/heads/", ""))
     }
 
     public async GetProjectRevisions(projectId: number): Promise<string[]> {
-        const data = await this.octokit.git.listMatchingRefs({...this.GithubInfo, ref: `heads/revisions/${projectId}`})
+        this.AssertGithubInfoIsSet();
+        const data = await this.octokit.git.listMatchingRefs({...this.GitHubRepoInfo!, ref: `heads/revisions/${projectId}`})
         return data.data.map(p => p.ref.replace("refs/heads/revisions/", ""))
     }
 
     public async GetRevisionBranches(): Promise<string[]> {
-        const data = await this.octokit.git.listMatchingRefs({...this.GithubInfo, ref: `heads/revisions/`})
+        this.AssertGithubInfoIsSet();
+        const data = await this.octokit.git.listMatchingRefs({...this.GitHubRepoInfo!, ref: `heads/revisions/`})
         return data.data.map(p => p.ref.replace("refs/heads/revisions/", ""))
     }
 
     public async CreateProjectRevision(project: ProjectIdentifier): Promise<string> {
-        const base = await this.octokit.repos.getBranch({...this.GithubInfo, branch: "main"});
+        this.AssertGithubInfoIsSet();
+        const base = await this.octokit.repos.getBranch({...this.GitHubRepoInfo!, branch: "main"});
         const {data} = await this.octokit.git.createRef({
-            ...this.GithubInfo,
+            ...this.GitHubRepoInfo!,
             ref: `refs/heads/revisions/${this.GetRevBranchName(project)}`,
             sha: base.data.commit.sha
         });
         return data.ref
     }
-    public async CreateBranch(branch:string): Promise<string> {
-        const base = await this.octokit.repos.getBranch({...this.GithubInfo, branch: "main"});
+
+    public async CreateBranch(branch: string): Promise<string> {
+        this.AssertGithubInfoIsSet();
+        const base = await this.octokit.repos.getBranch({...this.GitHubRepoInfo!, branch: "main"});
         const {data} = await this.octokit.git.createRef({
-            ...this.GithubInfo,
+            ...this.GitHubRepoInfo!,
             ref: `refs/heads/${branch}`,
             sha: base.data.commit.sha
         });
@@ -133,10 +162,11 @@ export class GitHubRepo {
         return `${project.projectId}_rev_${project.revision}`
     };
 
-    public async MergeBranchToMain(branch:string,title: string, body:string): Promise<string> {
+    public async MergeBranchToMain(branch: string, title: string, body: string): Promise<string> {
+        this.AssertGithubInfoIsSet();
         const pr = await this.octokit.pulls.create(
             {
-                ...this.GithubInfo,
+                ...this.GitHubRepoInfo!,
                 head: `refs/heads/${branch}`,
                 base: "main",
                 title: title,
@@ -144,14 +174,14 @@ export class GitHubRepo {
             });
 
         const merge = await this.octokit.pulls.merge({
-            ...this.GithubInfo,
+            ...this.GitHubRepoInfo!,
             pull_number: pr.data.number,
             merge: "squash",
 
         });
         if (merge.data.merged) {
             await this.octokit.git.deleteRef({
-                ...this.GithubInfo,
+                ...this.GitHubRepoInfo!,
                 ref: `heads/${branch}`,
             });
         }
@@ -159,9 +189,9 @@ export class GitHubRepo {
     }
 
     public async DeleteRevisionBranch(project: ProjectIdentifier) {
-
+        this.AssertGithubInfoIsSet();
         await this.octokit.git.deleteRef({
-            ...this.GithubInfo,
+            ...this.GitHubRepoInfo!,
             ref: `heads/revisions/${this.GetRevBranchName(project)}`,
         });
 
@@ -215,17 +245,18 @@ export class GitHubRepo {
     // }
 
 
-    public async CreateOrUpdateFiles(branch:string, files: FileInfo[], message = "") {
+    public async CreateOrUpdateFiles(branch: string, files: FileInfo[], message = "") {
+        this.AssertGithubInfoIsSet();
         const refInfo = `heads/${branch}`
         const refData = await this.octokit.git.getRef({
-            ...this.GithubInfo,
+            ...this.GitHubRepoInfo!,
             ref: refInfo,
         });
 
         const latestCommitSha = refData.data.object.sha;
 
         const commitData = await this.octokit.git.getCommit({
-            ...this.GithubInfo,
+            ...this.GitHubRepoInfo!,
             commit_sha: latestCommitSha,
         });
 
@@ -234,7 +265,7 @@ export class GitHubRepo {
 
         const tree = await this.octokit.git.createTree(
             {
-                ...this.GithubInfo,
+                ...this.GitHubRepoInfo!,
 
                 base_tree: baseTreeSha,
                 tree: files.map(f => ({
@@ -246,7 +277,7 @@ export class GitHubRepo {
                 }))
             });
         const commit = await this.octokit.git.createCommit({
-            ...this.GithubInfo,
+            ...this.GitHubRepoInfo!,
             message: message,
             tree: tree.data.sha,
             parents: [latestCommitSha],
@@ -254,7 +285,54 @@ export class GitHubRepo {
 
 
         await this.octokit.git.updateRef({
-            ...this.GithubInfo,
+            ...this.GitHubRepoInfo!,
+            ref: refInfo,
+            sha: commit.data.sha,
+        });
+
+
+    }
+    public async CreateOrUpdateFilesNoPathPrefix(branch: string, files: FileInfo[], message = "") {
+        this.AssertGithubInfoIsSet();
+        const refInfo = `heads/${branch}`
+        const refData = await this.octokit.git.getRef({
+            ...this.GitHubRepoInfo!,
+            ref: refInfo,
+        });
+
+        const latestCommitSha = refData.data.object.sha;
+
+        const commitData = await this.octokit.git.getCommit({
+            ...this.GitHubRepoInfo!,
+            commit_sha: latestCommitSha,
+        });
+
+        const baseTreeSha = commitData.data.tree.sha;
+
+
+        const tree = await this.octokit.git.createTree(
+            {
+                ...this.GitHubRepoInfo!,
+
+                base_tree: baseTreeSha,
+                tree: files.map(f => ({
+                    path: `${f.path}`,
+                    // path: `${githubRepoProjectsKey}/project-${project.projectId}/content/${file.path}`,
+                    mode: '100644' as const,
+                    type: 'blob' as const,
+                    content: f.content
+                }))
+            });
+        const commit = await this.octokit.git.createCommit({
+            ...this.GitHubRepoInfo!,
+            message: message,
+            tree: tree.data.sha,
+            parents: [latestCommitSha],
+        });
+
+
+        await this.octokit.git.updateRef({
+            ...this.GitHubRepoInfo!,
             ref: refInfo,
             sha: commit.data.sha,
         });
@@ -265,10 +343,10 @@ export class GitHubRepo {
 
     //Todo need to add ref:
     private async GetTreeDataFileContent(ref: string, path: string): Promise<GithubFileContent> {
-
+        this.AssertGithubInfoIsSet();
         try {
             const {data} = await this.octokit.rest.repos.getContent({
-                ...this.GithubInfo,
+                ...this.GitHubRepoInfo!,
                 path: path,
                 ref: ref
             });

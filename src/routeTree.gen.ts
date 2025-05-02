@@ -17,6 +17,8 @@ import { Route as IndexImport } from './routes/index'
 import { Route as ProjectsIndexImport } from './routes/projects/index'
 import { Route as AboutIndexImport } from './routes/about/index'
 import { Route as TestTestpathImport } from './routes/test/testpath'
+import { Route as HealthWeightGraphImport } from './routes/health/weightGraph'
+import { Route as HealthWeightEntriesImport } from './routes/health/weightEntries'
 import { Route as AboutEditImport } from './routes/about/edit'
 
 // Create/Update Routes
@@ -54,6 +56,18 @@ const AboutIndexRoute = AboutIndexImport.update({
 const TestTestpathRoute = TestTestpathImport.update({
   id: '/test/testpath',
   path: '/test/testpath',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const HealthWeightGraphRoute = HealthWeightGraphImport.update({
+  id: '/health/weightGraph',
+  path: '/health/weightGraph',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const HealthWeightEntriesRoute = HealthWeightEntriesImport.update({
+  id: '/health/weightEntries',
+  path: '/health/weightEntries',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -95,6 +109,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutEditImport
       parentRoute: typeof rootRoute
     }
+    '/health/weightEntries': {
+      id: '/health/weightEntries'
+      path: '/health/weightEntries'
+      fullPath: '/health/weightEntries'
+      preLoaderRoute: typeof HealthWeightEntriesImport
+      parentRoute: typeof rootRoute
+    }
+    '/health/weightGraph': {
+      id: '/health/weightGraph'
+      path: '/health/weightGraph'
+      fullPath: '/health/weightGraph'
+      preLoaderRoute: typeof HealthWeightGraphImport
+      parentRoute: typeof rootRoute
+    }
     '/test/testpath': {
       id: '/test/testpath'
       path: '/test/testpath'
@@ -126,6 +154,8 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/configure': typeof ConfigureRoute
   '/about/edit': typeof AboutEditRoute
+  '/health/weightEntries': typeof HealthWeightEntriesRoute
+  '/health/weightGraph': typeof HealthWeightGraphRoute
   '/test/testpath': typeof TestTestpathRoute
   '/about': typeof AboutIndexRoute
   '/projects': typeof ProjectsIndexRoute
@@ -136,6 +166,8 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/configure': typeof ConfigureRoute
   '/about/edit': typeof AboutEditRoute
+  '/health/weightEntries': typeof HealthWeightEntriesRoute
+  '/health/weightGraph': typeof HealthWeightGraphRoute
   '/test/testpath': typeof TestTestpathRoute
   '/about': typeof AboutIndexRoute
   '/projects': typeof ProjectsIndexRoute
@@ -147,6 +179,8 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/configure': typeof ConfigureRoute
   '/about/edit': typeof AboutEditRoute
+  '/health/weightEntries': typeof HealthWeightEntriesRoute
+  '/health/weightGraph': typeof HealthWeightGraphRoute
   '/test/testpath': typeof TestTestpathRoute
   '/about/': typeof AboutIndexRoute
   '/projects/': typeof ProjectsIndexRoute
@@ -159,6 +193,8 @@ export interface FileRouteTypes {
     | '/auth'
     | '/configure'
     | '/about/edit'
+    | '/health/weightEntries'
+    | '/health/weightGraph'
     | '/test/testpath'
     | '/about'
     | '/projects'
@@ -168,6 +204,8 @@ export interface FileRouteTypes {
     | '/auth'
     | '/configure'
     | '/about/edit'
+    | '/health/weightEntries'
+    | '/health/weightGraph'
     | '/test/testpath'
     | '/about'
     | '/projects'
@@ -177,6 +215,8 @@ export interface FileRouteTypes {
     | '/auth'
     | '/configure'
     | '/about/edit'
+    | '/health/weightEntries'
+    | '/health/weightGraph'
     | '/test/testpath'
     | '/about/'
     | '/projects/'
@@ -188,6 +228,8 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ConfigureRoute: typeof ConfigureRoute
   AboutEditRoute: typeof AboutEditRoute
+  HealthWeightEntriesRoute: typeof HealthWeightEntriesRoute
+  HealthWeightGraphRoute: typeof HealthWeightGraphRoute
   TestTestpathRoute: typeof TestTestpathRoute
   AboutIndexRoute: typeof AboutIndexRoute
   ProjectsIndexRoute: typeof ProjectsIndexRoute
@@ -198,6 +240,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ConfigureRoute: ConfigureRoute,
   AboutEditRoute: AboutEditRoute,
+  HealthWeightEntriesRoute: HealthWeightEntriesRoute,
+  HealthWeightGraphRoute: HealthWeightGraphRoute,
   TestTestpathRoute: TestTestpathRoute,
   AboutIndexRoute: AboutIndexRoute,
   ProjectsIndexRoute: ProjectsIndexRoute,
@@ -217,6 +261,8 @@ export const routeTree = rootRoute
         "/auth",
         "/configure",
         "/about/edit",
+        "/health/weightEntries",
+        "/health/weightGraph",
         "/test/testpath",
         "/about/",
         "/projects/"
@@ -233,6 +279,12 @@ export const routeTree = rootRoute
     },
     "/about/edit": {
       "filePath": "about/edit.tsx"
+    },
+    "/health/weightEntries": {
+      "filePath": "health/weightEntries.tsx"
+    },
+    "/health/weightGraph": {
+      "filePath": "health/weightGraph.tsx"
     },
     "/test/testpath": {
       "filePath": "test/testpath.tsx"

@@ -8,19 +8,29 @@ import { routeTree } from './routeTree.gen'
 import './styles.css'
 import reportWebVitals from './reportWebVitals.ts'
 import {Octokit} from "@octokit/rest";
-import {GetStoredPat, GitHubRepo} from "@/utils/github/githubHandler.ts";
+import {
+  defaultGithubDataRepo,
+  defaultGithubOwner,
+  GetStoredPat,
+  GitHubRepo,
+  type GitHubRepoInfo
+} from "@/utils/github/githubHandler.ts";
 import {ProjectHandler} from "@/utils/ProjectUtils/ProjectHandler.ts";
+import {GetWeightTrackerRepoInfo, WeightTrackerHandler} from "@/utils/weightTracker/weightTrackerHandler.ts";
 
 export interface RouterContext {
   octokit: Octokit,
   someData?:string,
-  githubRepo: GitHubRepo,
+  githubRepoFactory: (gitHubRepoInfo: GitHubRepoInfo)=>GitHubRepo,
   projectHandler: ProjectHandler,
+  weightTrackerHandler: WeightTrackerHandler,
 }
 
 const octokit = new Octokit({auth:GetStoredPat()})
-const githubRepo =  new GitHubRepo(octokit);
-const projectHandler = new ProjectHandler(githubRepo)
+const githubRepoFactory =  (repoInfo:GitHubRepoInfo)=>(new GitHubRepo(octokit)).WithGithubInfo(repoInfo) ;
+const projectHandler = new ProjectHandler(githubRepoFactory({owner:defaultGithubOwner,repo:defaultGithubDataRepo}))
+const weightTrackerRepoInfo = GetWeightTrackerRepoInfo()
+const weightTrackerHandler = new WeightTrackerHandler(githubRepoFactory({owner:weightTrackerRepoInfo?.owner ?? "",repo:weightTrackerRepoInfo?.repo ?? ""}))
 
 // Create a new router instance
 const router = createRouter({
@@ -28,8 +38,9 @@ const router = createRouter({
   context: {
     octokit: octokit,
     someData: "initialData",
-    githubRepo: githubRepo,
+    githubRepoFactory: githubRepoFactory,
     projectHandler: projectHandler,
+    weightTrackerHandler: weightTrackerHandler,
   },
   defaultPreload: 'intent',
   scrollRestoration: true,
