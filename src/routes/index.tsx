@@ -2,6 +2,7 @@ import {createFileRoute} from '@tanstack/react-router'
 import {useState} from "react";
 import {Button} from "@/components/ui/button.tsx";
 import {Input} from "@/components/ui/input.tsx";
+import {defaultGithubDataRepo, defaultGithubOwner} from "@/utils/github/githubHandler.ts";
 
 
 
@@ -22,7 +23,7 @@ function App() {
     return (
         <div className={""} style={{padding: "1rem" }}>
             <Button onClick={async () => {
-                const fetchedProjects = await routerContext.githubRepo.GetProjects()
+                const fetchedProjects = await routerContext.githubRepoFactory({owner:defaultGithubOwner,repo:defaultGithubDataRepo}).GetProjects()
                 setProjects(fetchedProjects?.projects.map(x=>x.name) ?? [])
             }}>
                 Get projects
@@ -32,7 +33,7 @@ function App() {
                 {projects.map(x=><div style={{paddingLeft: "1rem"}} key={x}>{x}</div>)}
             </div>
             <Button onClick={async () => {
-                const fetchedBranches = await routerContext.githubRepo.GetBranches()
+                const fetchedBranches = await routerContext.githubRepoFactory({owner:defaultGithubOwner,repo:defaultGithubDataRepo}).GetBranches()
                 setBranches(fetchedBranches)
             }}>
                 Get branches
@@ -43,7 +44,7 @@ function App() {
             </div>
             <Input type={"number"} value={newBranchRevision} onChange={e => setNewBranchRevision(Number(e.target.value))}/>
             <Button onClick={async () => {
-                const newBranch = await routerContext.githubRepo.CreateProjectRevision({projectId:1, revision:newBranchRevision})
+                const newBranch = await routerContext.githubRepoFactory({owner:defaultGithubOwner,repo:defaultGithubDataRepo}).CreateProjectRevision({projectId:1, revision:newBranchRevision})
                 setNewBranchRef(newBranch)
             }}>
                 Create branch
@@ -55,7 +56,7 @@ function App() {
             <label>Merge revision</label>
             <Input type={"number"} value={mergeRev} onChange={e => setMergeRev(Number(e.target.value))}/>
             <Button onClick={async () => {
-                const resMergeMessage = await routerContext.githubRepo.MergeBranchToMain(`revisions/1_rev_${mergeRev}`,"Test merge","Test merge")
+                const resMergeMessage = await routerContext.githubRepoFactory({owner:defaultGithubOwner,repo:defaultGithubDataRepo}).MergeBranchToMain(`revisions/1_rev_${mergeRev}`,"Test merge","Test merge")
                 setMergeMessage(resMergeMessage)
             }}>
                 Merge revision
@@ -68,7 +69,7 @@ function App() {
 
             <Input  value={deleteRevBranch} onChange={e => setDeleteRevBranch(Number(e.target.value))}/>
             <Button onClick={async () => {
-                 await routerContext.githubRepo.DeleteRevisionBranch({projectId:1,revision:deleteRevBranch})
+                 await routerContext.githubRepoFactory({owner:defaultGithubOwner,repo:defaultGithubDataRepo}).DeleteRevisionBranch({projectId:1,revision:deleteRevBranch})
 
             }}>
                 Delete revision
