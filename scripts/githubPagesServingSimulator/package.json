@@ -1,0 +1,21 @@
+{
+  "name": "githubpagesservingsimulator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist-server/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SimonEngineer/simonengineer.github.io.git"
+  },
+  "private": true,
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.1"
+  }
+}
