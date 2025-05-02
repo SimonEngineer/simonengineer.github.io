@@ -119,13 +119,3 @@
   }
 }
 
-/*@layer components {*/
-/*  .no-tailwind-styles {*/
-/*    all: unset; !* Resets the element’s styles completely *!*/
-/*    !* Or just override specific styles *!*/
-/*    background: none;*/
-/*    border: none;*/
-/*    padding: 0;*/
-/*  }*/
-/*}*/
-
