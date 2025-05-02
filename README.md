@@ -2,7 +2,7 @@
 
 ## Introduction
 This is a project for showing project progression and as a personal portfolio display. The intention is to use this frontend to write and format documentation and progress notes for any projects that you want.
-
+[Google place](https://google.com)
 
 ## Modification for GitHub pages
 React application using Tanstack Router.  

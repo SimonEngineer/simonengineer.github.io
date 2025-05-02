@@ -5,10 +5,10 @@ import type {RouterContext} from "@/main.tsx";
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   component: () => (
-    <>
+    <div className={"dark"}>
       <Outlet />
       <TanStackRouterDevtools />
-    </>
+    </div>
   ),
     validateSearch:(search: Record<string, unknown>):Record<string, unknown> => search,
     loaderDeps:({search}:{search:Record<string, unknown>})=>({search}),

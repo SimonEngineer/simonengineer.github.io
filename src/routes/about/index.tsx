@@ -14,7 +14,7 @@ function RouteComponent() {
 
     return (
         <div className="markdown-container">
-            <div className="markdown-body">
+            <div className="markdown-body markdown ">
                 <ReactMarkdown rehypePlugins={[rehypeHighlight]}>{readMe}</ReactMarkdown>
             </div>
         </div>

@@ -1,5 +1,9 @@
 import {createFileRoute} from '@tanstack/react-router'
 import {useState} from "react";
+import {Button} from "@/components/ui/button.tsx";
+import {Input} from "@/components/ui/input.tsx";
+
+
 
 export const Route = createFileRoute('/')({
     component: App,
@@ -16,58 +20,59 @@ function App() {
     const [mergeRev, setMergeRev] = useState<number>(0)
     const [mergeMessage, setMergeMessage] = useState<string>()
     return (
-        <div className={"bg-"} style={{padding: "1rem" }}>
-            <button onClick={async () => {
+        <div className={""} style={{padding: "1rem" }}>
+            <Button onClick={async () => {
                 const fetchedProjects = await routerContext.githubRepo.GetProjects()
                 setProjects(fetchedProjects?.projects.map(x=>x.name) ?? [])
             }}>
                 Get projects
-            </button>
+            </Button>
             <div>
                 <div>Projects:</div>
                 {projects.map(x=><div style={{paddingLeft: "1rem"}} key={x}>{x}</div>)}
             </div>
-            <button onClick={async () => {
+            <Button onClick={async () => {
                 const fetchedBranches = await routerContext.githubRepo.GetBranches()
                 setBranches(fetchedBranches)
             }}>
                 Get branches
-            </button>
+            </Button>
             <div>
                 <div>Branches:</div>
                 {branches.map(x=><div style={{paddingLeft: "1rem"}} key={x}>{x}</div>)}
             </div>
-            <input type={"number"} value={newBranchRevision} onChange={e => setNewBranchRevision(Number(e.target.value))}/>
-            <button onClick={async () => {
+            <Input type={"number"} value={newBranchRevision} onChange={e => setNewBranchRevision(Number(e.target.value))}/>
+            <Button onClick={async () => {
                 const newBranch = await routerContext.githubRepo.CreateProjectRevision({projectId:1, revision:newBranchRevision})
                 setNewBranchRef(newBranch)
             }}>
                 Create branch
-            </button>
+            </Button>
             {newBranchRef && <div>
                 <div>New branch ref: {newBranchRef}</div>
             </div>}
 
             <label>Merge revision</label>
-            <input type={"number"} value={mergeRev} onChange={e => setMergeRev(Number(e.target.value))}/>
-            <button onClick={async () => {
+            <Input type={"number"} value={mergeRev} onChange={e => setMergeRev(Number(e.target.value))}/>
+            <Button onClick={async () => {
                 const resMergeMessage = await routerContext.githubRepo.MergeBranchToMain(`revisions/1_rev_${mergeRev}`,"Test merge","Test merge")
                 setMergeMessage(resMergeMessage)
             }}>
                 Merge revision
-            </button>
+            </Button>
             {mergeMessage && <div>
                 <div>Merge message {mergeMessage}</div>
             </div>}
 
             <label>Delete rev branch</label>
-            <input type={"number"} value={deleteRevBranch} onChange={e => setDeleteRevBranch(Number(e.target.value))}/>
-            <button onClick={async () => {
+
+            <Input  value={deleteRevBranch} onChange={e => setDeleteRevBranch(Number(e.target.value))}/>
+            <Button onClick={async () => {
                  await routerContext.githubRepo.DeleteRevisionBranch({projectId:1,revision:deleteRevBranch})
 
             }}>
                 Delete revision
-            </button>
+            </Button>
         </div>
     )
 }
