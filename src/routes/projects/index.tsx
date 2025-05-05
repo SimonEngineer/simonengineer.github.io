@@ -48,9 +48,19 @@ function RouteComponent() {
         <input value={projectName} onChange={e => setProjectName(e.target.value)} placeholder={"Project name"}/>
         <button onClick={async () => {
             if(projectName === undefined) return
-            await routeContext.projectHandler.GetCreateProject(projectName,"Software")
+            await routeContext.projectHandler.CreateProject(projectName,"Software")
         }}>
            Create project
+        </button>
+
+
+        <button onClick={async () => {
+
+             localStorage.setItem("commit:main",JSON.stringify({bolle:"a",tosk:"s"}));
+
+
+        }}>
+           Store project
         </button>
     </div>
 }

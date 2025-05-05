@@ -23,7 +23,7 @@ function App() {
     return (
         <div className={""} style={{padding: "1rem" }}>
             <Button onClick={async () => {
-                const fetchedProjects = await routerContext.githubRepoFactory({owner:defaultGithubOwner,repo:defaultGithubDataRepo}).GetProjects()
+                const fetchedProjects = await routerContext.projectHandler.GetProjects()
                 setProjects(fetchedProjects?.projects.map(x=>x.name) ?? [])
             }}>
                 Get projects
@@ -44,8 +44,8 @@ function App() {
             </div>
             <Input type={"number"} value={newBranchRevision} onChange={e => setNewBranchRevision(Number(e.target.value))}/>
             <Button onClick={async () => {
-                const newBranch = await routerContext.githubRepoFactory({owner:defaultGithubOwner,repo:defaultGithubDataRepo}).CreateProjectRevision({projectId:1, revision:newBranchRevision})
-                setNewBranchRef(newBranch)
+                const newBranch = await routerContext.githubRepoFactory({owner:defaultGithubOwner,repo:defaultGithubDataRepo}).CreateBranch(`revisions/1_rev_${newBranchRevision}`)
+                newBranch && setNewBranchRef(newBranch)
             }}>
                 Create branch
             </Button>
@@ -69,7 +69,7 @@ function App() {
 
             <Input  value={deleteRevBranch} onChange={e => setDeleteRevBranch(Number(e.target.value))}/>
             <Button onClick={async () => {
-                 await routerContext.githubRepoFactory({owner:defaultGithubOwner,repo:defaultGithubDataRepo}).DeleteRevisionBranch({projectId:1,revision:deleteRevBranch})
+                 await routerContext.githubRepoFactory({owner:defaultGithubOwner,repo:defaultGithubDataRepo}).DeleteBranch(`revisions/1_rev_${deleteRevBranch}`)
 
             }}>
                 Delete revision

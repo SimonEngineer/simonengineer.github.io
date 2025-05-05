@@ -1,8 +1,8 @@
 import type {Octokit} from "@octokit/rest";
-import type {ProjectsMeta} from "@/models/ProjectMeta.ts";
 
 const localStoragePatKey = "GitHubPatToken"
-const githubRepoProjectsKey = "projects"
+const localStorageCommitTokenKeyGenerator = (branch: string) => `commit:${branch}`;
+export const githubRepoProjectsKey = "projects"
 export const defaultGithubDataRepo = import.meta.env.VITE_GITHUB_DATA_REPO;
 export const defaultGithubOwner = import.meta.env.VITE_GITHUB_DATA_REPO_OWNER;
 
@@ -29,32 +29,39 @@ export function DeletePat() {
     localStorage.removeItem(localStoragePatKey)
 }
 
-
-export async function GetTreeDataFileContent(path: string, octokit: Octokit): Promise<GithubFileContent> {
-    const {data} = await octokit.rest.repos.getContent({
-        owner: defaultGithubOwner,
-        repo: defaultGithubDataRepo,
-        path: path
-    });
-
-    // If it's a file, the content will be base64 encoded
-    if (Array.isArray(data)) {
-        return {
-            type: "directory",
-            files: data.map(d => {
-                const fileType: "file" | "directory" = d.type == 'file' ? "file" : "directory";
-                return {path: d.path, type: fileType}
-            }),
-            path: path
-        }
-    } else {
-        // @ts-ignore
-        const content = atob(data.content);
-        return {fileContent: content, type: 'file', path: path};
-    }
-
+type CommitInfo = {
+    branch: string;
+    sha: string;
+    timeOfCommitInMs: number;
 }
 
+const commitInfoCacheTimeInSeconds = 60;
+
+async function GetStoredOrFetchAndStoreCommitInfo(branch: string, getCommitFunction: (branch: string) => Promise<CommitInfo | null>): Promise<CommitInfo | null> {
+    const localStorageCommitInfo = localStorage.getItem(localStorageCommitTokenKeyGenerator(branch));
+
+    const fetchAndStoreCommitInfo =async ()=>{
+        const fetchedCommitInfo = await getCommitFunction(branch);
+        if(!fetchedCommitInfo) return null;
+        StoreCommitInfo(fetchedCommitInfo)
+        return fetchedCommitInfo;
+    }
+    if (!localStorageCommitInfo) {
+        return await fetchAndStoreCommitInfo()
+    }
+    const commitInfo: CommitInfo = JSON.parse(localStorageCommitInfo) as CommitInfo;
+    const now = new Date();
+    const delta = (now.getTime() - commitInfo.timeOfCommitInMs)
+    const diffInSeconds = Math.round(delta / 1000);
+    if(diffInSeconds > commitInfoCacheTimeInSeconds) {
+        return await fetchAndStoreCommitInfo()
+    }
+    return commitInfo;
+}
+
+function StoreCommitInfo(commitInfo: CommitInfo) {
+    localStorage.setItem(localStorageCommitTokenKeyGenerator(commitInfo.branch),JSON.stringify(commitInfo));
+}
 
 export type ProjectIdentifier = {
     projectId: number;
@@ -74,7 +81,7 @@ export type GitHubRepoInfo =
 
 export class GitHubRepo {
     private readonly octokit: Octokit;
-    private GitHubRepoInfo:GitHubRepoInfo | null = null;
+    private GitHubRepoInfo: GitHubRepoInfo | null = null;
 
     constructor(octokit: Octokit) {
         this.octokit = octokit;
@@ -86,31 +93,10 @@ export class GitHubRepo {
     }
 
     private AssertGithubInfoIsSet() {
-        if(!this.GitHubRepoInfo)throw new Error("GithubInfo is not set! Call method 'WithGithubInfo' with owner and repo");
-    }
-    // public async GetProjects(): Promise<string[]> {
-    //     const contentInProjectsFolder = await this.GetTreeDataFileContent(githubRepoProjectsKey)
-    //     const projects = contentInProjectsFolder.files?.filter(x => x.type === "directory");
-    //     if (projects === undefined) return []
-    //     return projects.map(p => p.path.replace(`${githubRepoProjectsKey}/`, ""))
-    // }
-    //Obsolete: Remove
-    public async GetProjects(): Promise<ProjectsMeta | null> {
-        this.AssertGithubInfoIsSet();
-        const projectsFile = await this.GetTreeDataFileContent("heads/main", `${githubRepoProjectsKey}/projects-meta.json`)
-        if (projectsFile.type !== "file") throw new Error("projects-meta.json is not a file")
-        if (projectsFile.fileContent == undefined) return null;
-        return JSON.parse(projectsFile.fileContent) as ProjectsMeta
+        if (!this.GitHubRepoInfo) throw new Error("GithubInfo is not set! Call method 'WithGithubInfo' with owner and repo");
     }
 
     public async GetFileContent(path: string, branch: string): Promise<string | null> {
-        this.AssertGithubInfoIsSet();
-        const file = await this.GetTreeDataFileContent(`heads/${branch}`, `${githubRepoProjectsKey}/${path}`);
-        if (file.type !== "file") throw new Error(`Given path ${path} is not a file `)
-        if (file.fileContent == undefined) return null;
-        return file.fileContent;
-    }
-    public async GetFileContentNoPathPrefix(path: string, branch: string): Promise<string | null> {
         this.AssertGithubInfoIsSet();
         const file = await this.GetTreeDataFileContent(`heads/${branch}`, `${path}`);
         if (file.type !== "file") throw new Error(`Given path ${path} is not a file `)
@@ -118,49 +104,49 @@ export class GitHubRepo {
         return file.fileContent;
     }
 
-    public async GetBranches(): Promise<string[]> {
+    public async GetDirectoryContent(path: string, branch: string): Promise<GithubFileInfo[] | null> {
         this.AssertGithubInfoIsSet();
-        const data = await this.octokit.git.listMatchingRefs({...this.GitHubRepoInfo!, ref: "heads"})
-        return data.data.map(p => p.ref.replace("refs/heads/", ""))
+        const directory = await this.GetTreeDataFileContent(`heads/${branch}`, `${path}`);
+        if (directory.type !== "directory") throw new Error(`Given path ${path} is not a directory `)
+        if (directory.files == undefined) return null;
+        return directory.files;
     }
 
-    public async GetProjectRevisions(projectId: number): Promise<string[]> {
+    public async GetBranches(branchFilter: string = ""): Promise<string[]> {
         this.AssertGithubInfoIsSet();
-        const data = await this.octokit.git.listMatchingRefs({...this.GitHubRepoInfo!, ref: `heads/revisions/${projectId}`})
-        return data.data.map(p => p.ref.replace("refs/heads/revisions/", ""))
+        const data = await this.octokit.git.listMatchingRefs({...this.GitHubRepoInfo!, ref: `heads/${branchFilter}`})
+        return data.data.map(p => p.ref.replace(`refs/heads/${branchFilter}`, ""))
     }
 
-    public async GetRevisionBranches(): Promise<string[]> {
-        this.AssertGithubInfoIsSet();
-        const data = await this.octokit.git.listMatchingRefs({...this.GitHubRepoInfo!, ref: `heads/revisions/`})
-        return data.data.map(p => p.ref.replace("refs/heads/revisions/", ""))
-    }
 
-    public async CreateProjectRevision(project: ProjectIdentifier): Promise<string> {
+    public async CreateBranch(branch: string): Promise<string | null> {
         this.AssertGithubInfoIsSet();
-        const base = await this.octokit.repos.getBranch({...this.GitHubRepoInfo!, branch: "main"});
-        const {data} = await this.octokit.git.createRef({
-            ...this.GitHubRepoInfo!,
-            ref: `refs/heads/revisions/${this.GetRevBranchName(project)}`,
-            sha: base.data.commit.sha
-        });
-        return data.ref
-    }
-
-    public async CreateBranch(branch: string): Promise<string> {
-        this.AssertGithubInfoIsSet();
-        const base = await this.octokit.repos.getBranch({...this.GitHubRepoInfo!, branch: "main"});
+        // const baseSha = await GetStoredOrFetchAndStoreCommitInfo("main", async (branch)=> {
+        //     const bR = await this.octokit.repos.getBranch({...this.GitHubRepoInfo!, branch: branch})
+        //     return {
+        //         timeOfCommitInMs: new Date().getTime(),
+        //         branch: branch,
+        //         sha: bR.data.commit.sha
+        //     }
+        // });
+        // if(!baseSha)return null;
+        // const {data} = await this.octokit.git.createRef({
+        //     ...this.GitHubRepoInfo!,
+        //     ref: `refs/heads/${branch}`,
+        //     sha: baseSha.sha
+        // });
+        // StoreCommitInfo({branch:"main",timeOfCommitInMs: new Date().getTime(), sha: data.object.sha});
+        const base = await this.octokit.repos.getBranch({...this.GitHubRepoInfo!, branch: branch})
         const {data} = await this.octokit.git.createRef({
             ...this.GitHubRepoInfo!,
             ref: `refs/heads/${branch}`,
             sha: base.data.commit.sha
         });
+
         return data.ref
     }
 
-    private GetRevBranchName(project: ProjectIdentifier): string {
-        return `${project.projectId}_rev_${project.revision}`
-    };
+
 
     public async MergeBranchToMain(branch: string, title: string, body: string): Promise<string> {
         this.AssertGithubInfoIsSet();
@@ -188,127 +174,43 @@ export class GitHubRepo {
         return merge.data.message
     }
 
-    public async DeleteRevisionBranch(project: ProjectIdentifier) {
+
+    public async DeleteBranch(branch: string) {
         this.AssertGithubInfoIsSet();
         await this.octokit.git.deleteRef({
             ...this.GitHubRepoInfo!,
-            ref: `heads/revisions/${this.GetRevBranchName(project)}`,
+            ref: `heads/${branch}`,
         });
 
     }
-
-    //
-    // public async CreateOrUpdateFile(project: ProjectIdentifier, fileName: string, fileContent: string) {
-    //     const filePath = `${githubRepoProjectsKey}/project-${project.projectId}/content/${fileName}`;
-    //     try {
-    //         // Check if the file already exists by getting the file's current SHA
-    //         const content = await this.octokit.repos.getContent({
-    //             ...this.GithubInfo,
-    //             path: filePath,
-    //             ref: `heads/revisions/${this.GetRevBranchName(project)}`,
-    //         });
-    //
-    //         // If the file exists, you need to update it
-    //
-    //         // @ts-ignore
-    //         const sha = content.data.sha; // SHA of the existing file
-    //
-    //         // Update the file with a new commit
-    //         const updateResponse = await this.octokit.repos.createOrUpdateFileContents({
-    //             ...this.GithubInfo,
-    //             path: filePath,
-    //             message: "Uploaded from website",
-    //             content: btoa(fileContent),
-    //             sha, // SHA of the existing file for updating
-    //             branch: `revisions/${this.GetRevBranchName(project)}`,
-    //         });
-    //
-    //
-    //         console.log('File updated successfully:', updateResponse.data);
-    //     } catch (e) {
-    //         if (typeof e === "object" && e !== null && 'status' in e && e.status === 404) {
-    //             // File does not exist, so we create a new file
-    //             const createResponse = await this.octokit.repos.createOrUpdateFileContents({
-    //                 ...this.GithubInfo,
-    //                 path: filePath,
-    //                 message: "Uploaded from website",
-    //                 content: btoa(fileContent),
-    //                 branch: `revisions/${this.GetRevBranchName(project)}`,
-    //
-    //             });
-    //
-    //             console.log('File uploaded successfully:', createResponse.data);
-    //         } else {
-    //             console.error('Error:', e);
-    //         }
-    //     }
-    // }
-
 
     public async CreateOrUpdateFiles(branch: string, files: FileInfo[], message = "") {
         this.AssertGithubInfoIsSet();
         const refInfo = `heads/${branch}`
-        const refData = await this.octokit.git.getRef({
-            ...this.GitHubRepoInfo!,
-            ref: refInfo,
-        });
-
-        const latestCommitSha = refData.data.object.sha;
-
-        const commitData = await this.octokit.git.getCommit({
-            ...this.GitHubRepoInfo!,
-            commit_sha: latestCommitSha,
-        });
-
-        const baseTreeSha = commitData.data.tree.sha;
 
 
-        const tree = await this.octokit.git.createTree(
-            {
+        const lastCommitInfo = await GetStoredOrFetchAndStoreCommitInfo(branch, async (branchInternal)=> {
+            const refData = await this.octokit.git.getRef({
                 ...this.GitHubRepoInfo!,
-
-                base_tree: baseTreeSha,
-                tree: files.map(f => ({
-                    path: `${githubRepoProjectsKey}/${f.path}`,
-                    // path: `${githubRepoProjectsKey}/project-${project.projectId}/content/${file.path}`,
-                    mode: '100644' as const,
-                    type: 'blob' as const,
-                    content: f.content
-                }))
+                ref: refInfo,
             });
-        const commit = await this.octokit.git.createCommit({
-            ...this.GitHubRepoInfo!,
-            message: message,
-            tree: tree.data.sha,
-            parents: [latestCommitSha],
+
+            const latestCommitSha = refData.data.object.sha;
+
+            return {
+                timeOfCommitInMs: new Date().getTime(),
+                branch: branchInternal,
+                sha: latestCommitSha
+            }
         });
-
-
-        await this.octokit.git.updateRef({
-            ...this.GitHubRepoInfo!,
-            ref: refInfo,
-            sha: commit.data.sha,
-        });
-
-
-    }
-    public async CreateOrUpdateFilesNoPathPrefix(branch: string, files: FileInfo[], message = "") {
-        this.AssertGithubInfoIsSet();
-        const refInfo = `heads/${branch}`
-        const refData = await this.octokit.git.getRef({
-            ...this.GitHubRepoInfo!,
-            ref: refInfo,
-        });
-
-        const latestCommitSha = refData.data.object.sha;
+        if(!lastCommitInfo)return null;
 
         const commitData = await this.octokit.git.getCommit({
             ...this.GitHubRepoInfo!,
-            commit_sha: latestCommitSha,
+            commit_sha: lastCommitInfo.sha,
         });
 
         const baseTreeSha = commitData.data.tree.sha;
-
 
         const tree = await this.octokit.git.createTree(
             {
@@ -317,7 +219,6 @@ export class GitHubRepo {
                 base_tree: baseTreeSha,
                 tree: files.map(f => ({
                     path: `${f.path}`,
-                    // path: `${githubRepoProjectsKey}/project-${project.projectId}/content/${file.path}`,
                     mode: '100644' as const,
                     type: 'blob' as const,
                     content: f.content
@@ -327,21 +228,20 @@ export class GitHubRepo {
             ...this.GitHubRepoInfo!,
             message: message,
             tree: tree.data.sha,
-            parents: [latestCommitSha],
+            parents: [lastCommitInfo.sha],
         });
 
 
-        await this.octokit.git.updateRef({
+        const comm = await this.octokit.git.updateRef({
             ...this.GitHubRepoInfo!,
             ref: refInfo,
             sha: commit.data.sha,
         });
-
+        StoreCommitInfo({branch: branch,timeOfCommitInMs: new Date().getTime(), sha: comm.data.object.sha});
 
     }
 
 
-    //Todo need to add ref:
     private async GetTreeDataFileContent(ref: string, path: string): Promise<GithubFileContent> {
         this.AssertGithubInfoIsSet();
         try {

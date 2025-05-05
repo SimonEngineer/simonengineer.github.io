@@ -38,7 +38,7 @@ export class WeightTrackerHandler {
     }
 
     public async GetWeightData(): Promise<WeightData[]> {
-        const fileData = await this.GitHubRepo.GetFileContentNoPathPrefix(weightDataFilePath, this._mainBranch)
+        const fileData = await this.GitHubRepo.GetFileContent(weightDataFilePath, this._mainBranch)
         if (!fileData) return [];
         return JSON.parse(fileData) as WeightData[];
     }
@@ -79,7 +79,7 @@ export class WeightTrackerHandler {
         }
         existingWeightData.sort((a, b) => this.ConvertStringDateToDate(a.date).getTime() - this.ConvertStringDateToDate(b.date).getTime())
 
-        await this.GitHubRepo.CreateOrUpdateFilesNoPathPrefix(this._mainBranch,
+        await this.GitHubRepo.CreateOrUpdateFiles(this._mainBranch,
             [
                 {
                     path: weightDataFilePath,
