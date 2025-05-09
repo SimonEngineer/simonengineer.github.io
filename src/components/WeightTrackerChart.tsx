@@ -20,8 +20,9 @@ import {
 import {Button} from "@/components/ui/button";
 import {Checkbox} from "@/components/ui/checkbox";
 import {Label} from "@/components/ui/label";
-import { useState} from "react";
+import {useEffect, useState} from "react";
 import type {WeightData} from "@/utils/weightTracker/weightTrackerHandler.ts";
+import { Input } from "@/components/ui/input"
 
 
 function GetMinByDate<T extends { date: string }>(data: T[]) {
@@ -32,10 +33,12 @@ function GetMaxByDate<T extends { date: string }>(data: T[]) {
     return data.reduce((max, curr) => (ConvertStringDateToDate(max.date) > ConvertStringDateToDate(curr.date) ? max : curr), data[0]);
 }
 
-
 //SWB - Since Winter Break
 //SNY - Since New Years
-const projectionKeys = ['155g-Day-SNY', '150g-Day-SWB', '200g-Day-SWB', '250g-Day-SWB', '300g-Day-SWB','interpolated-data'] as const;
+//SMY - Since May
+const projectionKeys = [
+    // '155g-Day-SNY', '150g-Day-SWB', '200g-Day-SWB', '250g-Day-SWB', '300g-Day-SWB',
+    '150g-Day-SMY', '155g-Day-SMY', '200g-Day-SMY', '250g-Day-SMY', '300g-Day-SMY', 'interpolated-data'] as const;
 type ProjectionKey = (typeof projectionKeys)[number];
 const projectionColorOptions: string[] = ["green", "yellow", "aqua", "beige", "blue"];
 
@@ -140,41 +143,70 @@ function ConvertStringDateToDate(date: string): Date {
 
 export function WeightTrackerChart({weightData}: { weightData: WeightData[] }) {
     const [isMilestonesVisible, setIsMilestonesVisible] = useState(false);
-    const startingWeightForProjectionAfterWinterBreak = {weight: 94.40, date: "03.03.2025"}
+    const [graphFromDate, setGraphFromDate] = useState(new Date(2025, 3, 1));
+    const [graphFromDateInput, setGraphFromDateInput] = useState(graphFromDate.toLocaleDateString('no',{dateStyle:"short"}));
+    const [filteredData,setFilteredDate] = useState(weightData.filter(x => ConvertStringDateToDate(x.date) >= graphFromDate));
 
-    const plannedWeightLoss = CreatePlannedWeightLoss({weight: 98.50, date: "02.01.2025"}, 0.155, 80);
-    const plannedWeightLossAfterWinterBreak = CreatePlannedWeightLoss(startingWeightForProjectionAfterWinterBreak, 0.155, 80);
-    const plannedWeightLossAfterWinterBreak200g = CreatePlannedWeightLoss(startingWeightForProjectionAfterWinterBreak, 0.2, 80);
-    const plannedWeightLossAfterWinterBreak250g = CreatePlannedWeightLoss(startingWeightForProjectionAfterWinterBreak, 0.25, 80);
-    const plannedWeightLossAfterWinterBreak300g = CreatePlannedWeightLoss(startingWeightForProjectionAfterWinterBreak, 0.3, 80);
+    useEffect(() => {
+        setFilteredDate(weightData.filter(x => ConvertStringDateToDate(x.date) >= graphFromDate))
+    }, [graphFromDate]);
+    // const startingWeightForProjectionAfterWinterBreak = {weight: 94.40, date: "03.03.2025"}
+    const startingWeightForProjectionSinceMay = {weight: 95.40, date: "07.05.2025"}
 
-    const filteredData = weightData.filter(x => ConvertStringDateToDate(x.date) >= new Date(2025, 0, 1));
+    // const plannedWeightLoss = CreatePlannedWeightLoss({weight: 98.50, date: "02.01.2025"}, 0.155, 80);
+    // const plannedWeightLossAfterWinterBreak = CreatePlannedWeightLoss(startingWeightForProjectionAfterWinterBreak, 0.155, 80);
+    // const plannedWeightLossAfterWinterBreak200g = CreatePlannedWeightLoss(startingWeightForProjectionAfterWinterBreak, 0.2, 80);
+    // const plannedWeightLossAfterWinterBreak250g = CreatePlannedWeightLoss(startingWeightForProjectionAfterWinterBreak, 0.25, 80);
+    // const plannedWeightLossAfterWinterBreak300g = CreatePlannedWeightLoss(startingWeightForProjectionAfterWinterBreak, 0.3, 80);
+
+
     // const interpolatedData = InterpolateMissingData(filteredData).filter(x=>x.interpolated);
     const interpolatedData = InterpolateMissingData(filteredData);
 
     const dataForGraph = AddAdditionalLinesToGraph(filteredData,
         [
-
+            // {
+            //     key: "155g-Day-SNY", projections: plannedWeightLoss
+            // },
+            // {
+            //     key: "150g-Day-SWB", projections: plannedWeightLossAfterWinterBreak
+            // },
+            // {
+            //     key: "200g-Day-SWB", projections: plannedWeightLossAfterWinterBreak200g
+            // },
+            // {
+            //     key: "250g-Day-SWB", projections: plannedWeightLossAfterWinterBreak250g
+            // },
+            // {
+            //     key: "300g-Day-SWB", projections: plannedWeightLossAfterWinterBreak300g
+            // },
             {
-                key: "155g-Day-SNY", projections: plannedWeightLoss
+                key: "150g-Day-SMY",
+                projections: CreatePlannedWeightLoss(startingWeightForProjectionSinceMay, 0.150, 80)
             },
             {
-                key: "150g-Day-SWB", projections: plannedWeightLossAfterWinterBreak
+                key: "155g-Day-SMY",
+                projections: CreatePlannedWeightLoss(startingWeightForProjectionSinceMay, 0.155, 80)
             },
             {
-                key: "200g-Day-SWB", projections: plannedWeightLossAfterWinterBreak200g
+                key: "200g-Day-SMY",
+                projections: CreatePlannedWeightLoss(startingWeightForProjectionSinceMay, 0.200, 80)
             },
             {
-                key: "250g-Day-SWB", projections: plannedWeightLossAfterWinterBreak250g
+                key: "250g-Day-SMY",
+                projections: CreatePlannedWeightLoss(startingWeightForProjectionSinceMay, 0.250, 80)
             },
             {
-                key: "300g-Day-SWB", projections: plannedWeightLossAfterWinterBreak300g
-            },{
+                key: "300g-Day-SMY",
+                projections: CreatePlannedWeightLoss(startingWeightForProjectionSinceMay, 0.300, 80)
+            },
+            {
                 key: "interpolated-data", projections: interpolatedData
             }
         ]);
 
-    const defaultShowLines: ProjectionKey[] = ["155g-Day-SNY", "150g-Day-SWB"]
+    // const defaultShowLines: ProjectionKey[] = ["155g-Day-SNY", "150g-Day-SWB"]
+    const defaultShowLines: ProjectionKey[] = ["150g-Day-SMY"]
     const [includeLines, setIncludeLines] = useState(projectionKeys.filter(x=>x!=='interpolated-data').map(
         (key) => {
             const dataExists = dataForGraph.some(x => x[key as ProjectionKey] !== undefined)
@@ -285,11 +317,25 @@ export function WeightTrackerChart({weightData}: { weightData: WeightData[] }) {
 
 
                                     <ReferenceLine
-                                        x={findClosestProjectedWeight(91.6, "155g-Day-SNY").date}
+                                        x={findClosestProjectedWeight(94, "150g-Day-SMY").date}
                                         stroke={"lightyellow"}
                                         strokeWidth={1}
                                         label={isMilestonesVisible ? {
-                                            value: "Milestone 91.6kg original first goal",
+                                            value: "Milestone 94kg",
+                                            position: "insideBottomRight"
+                                            // angle:45
+                                        } : {}
+                                        }
+                                        style={{opacity: isMilestonesVisible ? 100 : 0}}
+                                    />
+
+
+                                    <ReferenceLine
+                                        x={findClosestProjectedWeight(90, "150g-Day-SMY").date}
+                                        stroke={"lightgreen"}
+                                        strokeWidth={1}
+                                        label={isMilestonesVisible ? {
+                                            value: "Milestone 90kg ",
                                             position: "insideBottomRight"
                                             // angle:45
                                         } : {}
@@ -298,38 +344,32 @@ export function WeightTrackerChart({weightData}: { weightData: WeightData[] }) {
                                     />
 
                                     <ReferenceLine
-                                        x={findClosestProjectedWeight(90, "155g-Day-SNY").date}
-                                        stroke={"lightgreen"}
-                                        strokeWidth={2}
-                                        label={isMilestonesVisible ? {
-                                            value: "Milestone 90kg",
-                                            position: "insideBottomLeft"
-                                        } : {}}
-                                        spacing={10}
-                                        style={{opacity: isMilestonesVisible ? 100 : 0}}
-                                    />
-                                    <ReferenceLine
-                                        x={findClosestProjectedWeight(85, "155g-Day-SNY").date}
+                                        x={findClosestProjectedWeight(85, "150g-Day-SMY").date}
                                         stroke={"green"}
                                         strokeWidth={2}
                                         label={isMilestonesVisible ? {
-                                            value: "Milestone 85kg",
+                                            value: "Milestone 85kg ",
                                             position: "insideBottomRight"
-                                        } : {}}
-                                        spacing={10}
+                                            // angle:45
+                                        } : {}
+                                        }
                                         style={{opacity: isMilestonesVisible ? 100 : 0}}
                                     />
+
+
                                     <ReferenceLine
-                                        x={findClosestProjectedWeight(80, "155g-Day-SNY").date}
+                                        x={findClosestProjectedWeight(80, "150g-Day-SMY").date}
                                         stroke={"green"}
                                         strokeWidth={4}
                                         label={isMilestonesVisible ? {
-                                            value: "Milestone 80kg: Did i do it?",
+                                            value: "Final goal 80kg",
                                             position: "insideRight"
-                                        } : {}}
-                                        spacing={10}
+                                            // angle:45
+                                        } : {}
+                                        }
                                         style={{opacity: isMilestonesVisible ? 100 : 0}}
                                     />
+
 
 
                                     <Line
@@ -375,6 +415,11 @@ export function WeightTrackerChart({weightData}: { weightData: WeightData[] }) {
                         <div className={"flex-[2] flex flex-col justify-center space-y-2"}>
                             <Button variant={"secondary"}
                                     onClick={() => setIsMilestonesVisible(x => !x)}>{isMilestonesVisible ? "Hide milestones" : "Show milestones"}</Button>
+                            <div className={"flex-[4] justify-center flex-col flex space-y-2"}>
+                                <Label>Set from date to filter graph: format dd.mm.YYYY</Label>
+                                <Input value={graphFromDateInput} onChange={x=>setGraphFromDateInput(x.target.value)}  />
+                                <Button onClick={()=>setGraphFromDate(ConvertStringDateToDate(graphFromDateInput))}>Use date</Button>
+                            </div>
                             <div className={"space-y-2 flex-[6] justify-center flex-col flex"}>
                                 {includeLines.filter(x => x.include).map((line, idx) => {
                                         const color = projectionColorOptions[idx] ?? "yellow";
@@ -390,6 +435,7 @@ export function WeightTrackerChart({weightData}: { weightData: WeightData[] }) {
                                     }
                                 )}
                             </div>
+                            <div className={"flex-[4] justify-center flex-col flex"}></div>
                             {/*<div className={"flex-1"}></div>*/}
                         </div>
                     </div>
