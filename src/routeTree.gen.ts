@@ -21,6 +21,7 @@ import { Route as TestTestpathImport } from './routes/test/testpath'
 import { Route as HealthWeightGraphImport } from './routes/health/weightGraph'
 import { Route as HealthWeightEntriesImport } from './routes/health/weightEntries'
 import { Route as AboutEditImport } from './routes/about/edit'
+import { Route as LoreOfPelletsheimIndexImport } from './routes/lore/of/pelletsheim/index'
 
 // Create/Update Routes
 
@@ -81,6 +82,12 @@ const HealthWeightEntriesRoute = HealthWeightEntriesImport.update({
 const AboutEditRoute = AboutEditImport.update({
   id: '/about/edit',
   path: '/about/edit',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const LoreOfPelletsheimIndexRoute = LoreOfPelletsheimIndexImport.update({
+  id: '/lore/of/pelletsheim/',
+  path: '/lore/of/pelletsheim/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -158,6 +165,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsIndexImport
       parentRoute: typeof rootRoute
     }
+    '/lore/of/pelletsheim/': {
+      id: '/lore/of/pelletsheim/'
+      path: '/lore/of/pelletsheim'
+      fullPath: '/lore/of/pelletsheim'
+      preLoaderRoute: typeof LoreOfPelletsheimIndexImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -174,6 +188,7 @@ export interface FileRoutesByFullPath {
   '/test/testpath': typeof TestTestpathRoute
   '/about': typeof AboutIndexRoute
   '/projects': typeof ProjectsIndexRoute
+  '/lore/of/pelletsheim': typeof LoreOfPelletsheimIndexRoute
 }
 
 export interface FileRoutesByTo {
@@ -187,6 +202,7 @@ export interface FileRoutesByTo {
   '/test/testpath': typeof TestTestpathRoute
   '/about': typeof AboutIndexRoute
   '/projects': typeof ProjectsIndexRoute
+  '/lore/of/pelletsheim': typeof LoreOfPelletsheimIndexRoute
 }
 
 export interface FileRoutesById {
@@ -201,6 +217,7 @@ export interface FileRoutesById {
   '/test/testpath': typeof TestTestpathRoute
   '/about/': typeof AboutIndexRoute
   '/projects/': typeof ProjectsIndexRoute
+  '/lore/of/pelletsheim/': typeof LoreOfPelletsheimIndexRoute
 }
 
 export interface FileRouteTypes {
@@ -216,6 +233,7 @@ export interface FileRouteTypes {
     | '/test/testpath'
     | '/about'
     | '/projects'
+    | '/lore/of/pelletsheim'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -228,6 +246,7 @@ export interface FileRouteTypes {
     | '/test/testpath'
     | '/about'
     | '/projects'
+    | '/lore/of/pelletsheim'
   id:
     | '__root__'
     | '/'
@@ -240,6 +259,7 @@ export interface FileRouteTypes {
     | '/test/testpath'
     | '/about/'
     | '/projects/'
+    | '/lore/of/pelletsheim/'
   fileRoutesById: FileRoutesById
 }
 
@@ -254,6 +274,7 @@ export interface RootRouteChildren {
   TestTestpathRoute: typeof TestTestpathRoute
   AboutIndexRoute: typeof AboutIndexRoute
   ProjectsIndexRoute: typeof ProjectsIndexRoute
+  LoreOfPelletsheimIndexRoute: typeof LoreOfPelletsheimIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -267,6 +288,7 @@ const rootRouteChildren: RootRouteChildren = {
   TestTestpathRoute: TestTestpathRoute,
   AboutIndexRoute: AboutIndexRoute,
   ProjectsIndexRoute: ProjectsIndexRoute,
+  LoreOfPelletsheimIndexRoute: LoreOfPelletsheimIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -288,7 +310,8 @@ export const routeTree = rootRoute
         "/health/weightGraph",
         "/test/testpath",
         "/about/",
-        "/projects/"
+        "/projects/",
+        "/lore/of/pelletsheim/"
       ]
     },
     "/": {
@@ -320,6 +343,9 @@ export const routeTree = rootRoute
     },
     "/projects/": {
       "filePath": "projects/index.tsx"
+    },
+    "/lore/of/pelletsheim/": {
+      "filePath": "lore/of/pelletsheim/index.tsx"
     }
   }
 }
